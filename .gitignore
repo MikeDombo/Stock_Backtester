@@ -87,6 +87,14 @@ ENV/
 # Rope project settings
 .ropeproject
 
+.idea/
+data/*
+quant_data/*
+*.pkl
+*.csv
+*.xls
+*.xlsx
+
 # =========================
 # Operating System Files
 # =========================

@@ -10,7 +10,7 @@ import argparse
 import logging
 
 
-def generate_sold_stocks(data_dir, date_fmt, columns):
+def generate_sold_stocks(data_dir, date_fmt, columns, num_to_buy):
 	bought_stocks = []
 	if not os.path.isfile("date_keyed.pkl"):
 		if not os.path.isdir(data_dir):
@@ -33,18 +33,19 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 				if data[0] not in date_keyed:
 					date_keyed[data[0]] = {}
 				date_keyed[data[0]][symbol] = insert
-		symbol_keyed = None
+
+		del symbol_keyed
 		logger.info("Done pivoting data")
 		logger.info("Dumping pivoted data to pickle")
 
 		pickle.dump(date_keyed, open("date_keyed.pkl", "wb"))
 		logger.info("Done pickling")
-		bought_stocks = find_bought_stocks(date_keyed)
+		bought_stocks = find_bought_stocks(date_keyed, num_to_buy)
 	else:
 		logger.info("Loading pickled data")
 		date_keyed = pickle.load(open("date_keyed.pkl", "rb"))
 		logger.info("Done loading pickled data")
-		bought_stocks = find_bought_stocks(date_keyed)
+		bought_stocks = find_bought_stocks(date_keyed, num_to_buy)
 
 	sold_stocks = []
 	logger.info("Finding profits/losses")
@@ -63,18 +64,27 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 
 		sell_order = {"symbol": symbol, "buy_date": date, "buy_price": buy_price, "buy_change": change_bought_on,
 					  "sell_month": 0, "sell_6_months": 0, "sell_year": 0, "sell_5_years": 0, "buy_rank": rank}
-		if date_plus_month is not False:
+
+		if date_plus_month is not False and date_plus_month is not None:
 			if symbol in date_keyed[date_plus_month]:
 				sell_order["sell_month"] = date_keyed[date_plus_month][symbol]["close"]
-		if date_plus_6_months is not False:
+		elif date_plus_month is False:
+			sell_order["sell_month"] = None
+		if date_plus_6_months is not False and date_plus_6_months is not None:
 			if symbol in date_keyed[date_plus_6_months]:
 				sell_order["sell_6_months"] = date_keyed[date_plus_6_months][symbol]["close"]
-		if date_plus_year is not False:
+		elif date_plus_6_months is False:
+			sell_order["sell_6_months"] = None
+		if date_plus_year is not False and date_plus_year is not None:
 			if symbol in date_keyed[date_plus_year]:
 				sell_order["sell_year"] = date_keyed[date_plus_year][symbol]["close"]
-		if date_plus_5_years is not False:
+		elif date_plus_year is False:
+			sell_order["sell_year"] = None
+		if date_plus_5_years is not False and date_plus_5_years is not None:
 			if symbol in date_keyed[date_plus_5_years]:
 				sell_order["sell_5_years"] = date_keyed[date_plus_5_years][symbol]["close"]
+		elif date_plus_5_years is False:
+			sell_order["sell_5_years"] = None
 		sold_stocks += [sell_order]
 
 	logger.info("Done finding P&L")
@@ -85,6 +95,13 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 
 
 def market_day(date, market_data_days):
+	"""
+	Returns the next market day for which data is available.
+	:param date:
+	:param market_data_days:
+	:return: date if a market day could be found. None if a market day could not be found. False if the day has not
+	yet occurred
+	"""
 	if date in market_data_days:
 		return date
 	if date > max(market_data_days):
@@ -94,18 +111,20 @@ def market_day(date, market_data_days):
 		if date + relativedelta(days=i) in market_data_days:
 			return date + relativedelta(days=i)
 
-	return False
+	return None
 
 
-def find_bought_stocks(date_keyed):
+def find_bought_stocks(date_keyed, length):
 	if not os.path.isfile("bought_stocks.pkl") and date_keyed is not None:
 		bought_stocks = []
 		logger.info("Finding daily losers")
 		for date, symbol_data in date_keyed.items():
-			a = find_biggest_losers(symbol_data)
+			a = find_biggest_losers(symbol_data, length)
 			for symbol, rank in a:
 				bought_stocks += [{'symbol': symbol, 'price': symbol_data[symbol]['close'],
 								   'change': symbol_data[symbol]['change'], 'day': date, 'rank': rank}]
+		# Sort the bought stocks by date of purchase
+		bought_stocks = sorted(bought_stocks, key=lambda k: k['day'])
 
 		logger.info("Dumping bought stock data to pickle")
 		pickle.dump(bought_stocks, open("bought_stocks.pkl", "wb"))
@@ -118,12 +137,11 @@ def find_bought_stocks(date_keyed):
 		return p
 
 
-def find_biggest_losers(d):
+def find_biggest_losers(d, length=50):
 	minheap = []
 	for symbol, data in d.items():
 		heapq.heappush(minheap, (data["change"], symbol))
 
-	length = 10000
 	if len(minheap) < length:
 		length = len(minheap)
 	ordered_stocks = [heapq.heappop(minheap) for i in range(length)]
@@ -138,6 +156,8 @@ def find_biggest_losers(d):
 
 
 def percent_change(open, close):
+	if open is None or close is None:
+		return None
 	if open == 0:
 		return 0
 	return (close-open)/open
@@ -166,34 +186,64 @@ def analyze_trades(sold_stocks=None):
 		sold_stocks = pickle.load(open("sold_stocks.pkl", "rb"))
 		logger.info("Done loading trades")
 
+	# Make directories to store CSVs
+	output_dir = "output"
+	curr_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+	new_dir = os.path.join(output_dir, curr_date)
+	directory_num = 1
+	while os.path.isdir(new_dir):
+		new_dir = os.path.join(output_dir, curr_date + "_" + str(directory_num))
+		directory_num += 1
+	os.makedirs(new_dir)
+
+	column_names = ["Symbol", "Buy Date", "Change on Buy Date", "Rank", "Buy Price",
+					 "Sell 1 Month Change", "Sell 6 Months Change",
+					 "Sell 1 Year Change", "Sell 5 Years Change",
+					 "Sell 1 Month Price", "Sell 6 Months Price",
+					 "Sell 1 Year Price", "Sell 5 Years Price"
+					 ]
+	numeric_columns = ["Change on Buy Date", "Buy Price", "Sell 1 Month Change", "Sell 6 Months Change",
+					"Sell 1 Year Change", "Sell 5 Years Change", "Sell 1 Month Price", "Sell 6 Months Price",
+					"Sell 1 Year Price", "Sell 5 Years Price"
+					]
+	import Statistics
+	stock_stats = Statistics.Statistics(column_names)
+
 	row_count = 0
-	for sheet_num in range(0, (len(sold_stocks) / 1048000)+1):
-		logger.info("Writing to CSV: "+"stock_sales_"+str(sheet_num)+".csv"+". Number "+str(sheet_num + 1)+" of "+str((len(sold_stocks) / 1048000)+1))
-		with open("stock_sales_"+str(sheet_num)+".csv", "wb") as csvF:
+	for sheet_num in range(0, (len(sold_stocks) / 1048000) + 1):
+		csv_filename = os.path.join(new_dir, "stock_sales_"+str(sheet_num)+".csv")
+		logger.info("Writing to CSV: "+csv_filename+". Number "+str(sheet_num + 1)+" of "+str((len(sold_stocks) / 1048000)+1))
+		with open(csv_filename, "wb") as csvF:
 			writer = csv.writer(csvF)
-			writer.writerow(["Symbol", "Buy Date", "Change on Buy Date", "Rank", "Buy Price",
-							 "Sell 1 Month Change", "Sell 6 Months Change",
-							 "Sell 1 Year Change", "Sell 5 Years Change",
-							 "Sell 1 Month Price", "Sell 6 Months Price",
-							 "Sell 1 Year Price", "Sell 5 Years Price"
-							 ])
+			writer.writerow(column_names)
 
 			count = 0
-			for i,stock in enumerate(sold_stocks):
+			for stock in sold_stocks:
 				if count < row_count:
 					count += 1
 					continue
 				if count > 1048000 * (sheet_num + 1):
 					break
-				writer.writerow([stock["symbol"], stock["buy_date"], stock["buy_change"], stock["buy_rank"], stock["buy_price"],
-								 percent_change(stock["buy_price"], stock["sell_month"]),
-								 percent_change(stock["buy_price"], stock["sell_6_months"]),
-								 percent_change(stock["buy_price"], stock["sell_year"]),
-								 percent_change(stock["buy_price"], stock["sell_5_years"]),
-								 stock["sell_month"], stock["sell_6_months"], stock["sell_year"], stock["sell_5_years"]
-								 ])
+				row_data = [stock["symbol"], stock["buy_date"], stock["buy_change"], stock["buy_rank"], stock["buy_price"],
+							 percent_change(stock["buy_price"], stock["sell_month"]),
+							 percent_change(stock["buy_price"], stock["sell_6_months"]),
+							 percent_change(stock["buy_price"], stock["sell_year"]),
+							 percent_change(stock["buy_price"], stock["sell_5_years"]),
+							 stock["sell_month"], stock["sell_6_months"], stock["sell_year"], stock["sell_5_years"]
+							 ]
+				writer.writerow(row_data)
+				stock_stats.add_data_multi(numeric_columns, [stock["buy_change"], stock["buy_price"],
+							 percent_change(stock["buy_price"], stock["sell_month"]),
+							 percent_change(stock["buy_price"], stock["sell_6_months"]),
+							 percent_change(stock["buy_price"], stock["sell_year"]),
+							 percent_change(stock["buy_price"], stock["sell_5_years"]),
+							 stock["sell_month"], stock["sell_6_months"], stock["sell_year"], stock["sell_5_years"]
+							 ])
 				count += 1
 				row_count += 1
+
+	for name in numeric_columns:
+		print(name+" :\t%s" % stock_stats.get_stats(name))
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s | %(message)s')
@@ -206,6 +256,7 @@ if __name__ == '__main__':
 		parser.add_argument('-oc', '--open_column', type=int, nargs=1, help='Zero-indexed CSV column for the open price')
 		parser.add_argument('-cc', '--close_column', type=int, nargs=1, help='Zero-indexed CSV column for the close price')
 		parser.add_argument('-dc', '--date_column', type=int, nargs=1, help='Zero-indexed CSV column for the date')
+		parser.add_argument('-n', '--num_to_buy', type=int, nargs=1, help='Number of stocks to buy per day')
 
 		args = parser.parse_args()
 		data_dir = "data"
@@ -213,6 +264,7 @@ if __name__ == '__main__':
 		date_column = 0
 		open_column = 1
 		close_column = 4
+		num_to_buy = 100
 
 		if args.directory:
 			data_dir = args.directory[0]
@@ -224,7 +276,9 @@ if __name__ == '__main__':
 			close_column = args.close_column[0]
 		if args.date_column:
 			date_column = args.date_column[0]
+		if args.num_to_buy:
+			num_to_buy = args.num_to_buy[0]
 
-		generate_sold_stocks(data_dir, date_fmt, (date_column, open_column, close_column))
+		generate_sold_stocks(data_dir, date_fmt, (date_column, open_column, close_column), num_to_buy)
 	else:
 		analyze_trades()

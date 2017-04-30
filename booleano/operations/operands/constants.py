@@ -214,14 +214,25 @@ class ArithmeticVariable(object):
 			return cls.flatten(S[0]) + cls.flatten(S[1:])
 		return S[:1] + cls.flatten(S[1:])
 
+	def replace(self, num, context, namespace=True):
+		for k, v in self.required_variables.items():
+			if namespace and self.namespace_separator not in k:
+				continue
+			num = num.replace(k, str(v.to_python(context)))
+		return num
+
 	def evaluate(self, context):
 		number = self.flatten(self.parsed_results)
 		number = "".join(number)
-		for k, v in self.required_variables.items():
-			number = number.replace(k, str(v.to_python(context)))
+		# Replace all variables with numbers
+		# First replace variables with namespaces defined to avoid clobbering
+		number = self.replace(number, context)
+		# Then replace variables with no namespace
+		number = self.replace(number, context, False)
 		number = number.replace("^", "**")
 		import SafeEval
-		return SafeEval.eval_expr(number)
+		answer = SafeEval.eval_expr(number)
+		return answer
 
 
 class Arithmetic(Constant):

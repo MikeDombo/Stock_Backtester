@@ -245,7 +245,7 @@ class Parser(object):
 									[
 										(Literal("["), 1, opAssoc.RIGHT),
 										(Literal("]"), 1, opAssoc.LEFT),
-										#(factop, 1, opAssoc.LEFT),
+										("!", 1, opAssoc.LEFT),
 										(expop, 2, opAssoc.RIGHT),
 										(signop, 1, opAssoc.RIGHT),
 										(multop, 2, opAssoc.LEFT),
@@ -513,6 +513,7 @@ class EvaluableParser(Parser):
 		multop = oneOf('* /')
 		plusop = oneOf('+ -')
 		modop = Literal('%')
+		factop = Literal("!")
 
 		operand = Combine((integers + Optional(decimals)) | variable)
 
@@ -520,6 +521,7 @@ class EvaluableParser(Parser):
 								  [
 									  (Literal("[").setParseAction(replaceWith("(")), 1, opAssoc.RIGHT),
 									  (Literal("]").setParseAction(replaceWith(")")), 1, opAssoc.LEFT),
+									  ("!", 1, opAssoc.LEFT),
 									  (expop, 2, opAssoc.RIGHT),
 									  (signop, 1, opAssoc.RIGHT),
 									  (multop, 2, opAssoc.LEFT),

@@ -33,16 +33,15 @@ Generic Pyparsing-based parser implementation.
 import re
 
 from pyparsing import (Suppress, CaselessLiteral, Word, quotedString, alphas,
-	nums, operatorPrecedence, opAssoc, Forward, ParseException, removeQuotes,
-	Optional, OneOrMore, Combine, StringStart, StringEnd, ZeroOrMore, Group,
-	Regex, Literal, delimitedList, ParserElement, oneOf, NotAny, replaceWith)
+                       nums, operatorPrecedence, opAssoc, Forward, ParseException, removeQuotes,
+                       Optional, OneOrMore, Combine, StringStart, StringEnd, ZeroOrMore, Group,
+                       Regex, Literal, delimitedList, ParserElement, oneOf, NotAny, replaceWith)
 
 from booleano.parser.trees import EvaluableParseTree, ConvertibleParseTree
 from booleano.operations import (Not, And, Or, Xor, Equal, NotEqual, LessThan,
-	GreaterThan, LessEqual, GreaterEqual, BelongsTo, IsSubset, String, Number,
-	Set, Variable, Function, PlaceholderVariable, PlaceholderFunction, Arithmetic)
+                                 GreaterThan, LessEqual, GreaterEqual, BelongsTo, IsSubset, String, Number,
+                                 Set, Variable, Function, PlaceholderVariable, PlaceholderFunction, Arithmetic)
 from booleano.exc import BadExpressionError
-
 
 __all__ = ("EvaluableParser", "ConvertibleParser")
 
@@ -90,7 +89,7 @@ class Parser(object):
 	def build_parser(self):
 		self._parser = (StringStart() + self.define_operation() + StringEnd())
 
-	#{ Operand generators; used to create the grammar
+	# { Operand generators; used to create the grammar
 
 	def define_operation(self):
 		grp_start = Suppress(self._grammar.get_token("group_start"))
@@ -196,7 +195,7 @@ class Parser(object):
 		args_end = Suppress(self._grammar.get_token("arguments_end"))
 		args_sep = self._grammar.get_token("arguments_separator")
 		arguments = Optional(Group(delimitedList(operand, delim=args_sep)),
-							 default=())
+		                     default=())
 		arguments = arguments.setResultsName("arguments")
 		arguments.setParseAction(lambda tokens: tokens[0])
 		function = function_name + args_start + arguments + args_end
@@ -242,17 +241,17 @@ class Parser(object):
 		operand = Combine((integers + Optional(decimals)) | variable)
 
 		expr = operatorPrecedence(operand,
-									[
-										(Literal("["), 1, opAssoc.RIGHT),
-										(Literal("]"), 1, opAssoc.LEFT),
-										("!", 1, opAssoc.LEFT),
-										(expop, 2, opAssoc.RIGHT),
-										(signop, 1, opAssoc.RIGHT),
-										(multop, 2, opAssoc.LEFT),
-										(modop, 2, opAssoc.LEFT),
-										(plusop, 2, opAssoc.LEFT),
-									]
-								)
+		                          [
+			                          (Literal("["), 1, opAssoc.RIGHT),
+			                          (Literal("]"), 1, opAssoc.LEFT),
+			                          ("!", 1, opAssoc.LEFT),
+			                          (expop, 2, opAssoc.RIGHT),
+			                          (signop, 1, opAssoc.RIGHT),
+			                          (multop, 2, opAssoc.LEFT),
+			                          (modop, 2, opAssoc.LEFT),
+			                          (plusop, 2, opAssoc.LEFT),
+		                          ]
+		                          )
 		expr = Combine(expr)
 		expr.setParseAction(self.make_arithmetic)
 		expr.setName("arithmetic")
@@ -261,7 +260,6 @@ class Parser(object):
 	def make_arithmetic(self, s, l, tokens):
 		"""Make a variable using the tokens passed."""
 		raise NotImplementedError("It's up to the actual parser to make the arithmetic function")
-
 
 	def define_number(self):
 		"""
@@ -289,8 +287,7 @@ class Parser(object):
 		digits = Word(nums)
 		# Building the integers and decimals:
 		sign = positive_sign | negative_sign
-		thousands = Word(nums, max=3) + \
-					OneOrMore(thousands_sep + Word(nums, exact=3))
+		thousands = Word(nums, max=3) + OneOrMore(thousands_sep + Word(nums, exact=3))
 		integers = thousands | digits
 		decimals = decimal_sep + digits
 
@@ -315,7 +312,7 @@ class Parser(object):
 		# --- Defining the individual identifiers:
 		# Getting all the Unicode numbers in a single string:
 		unicode_numbers = "".join([unichr(n) for n in xrange(0x10000)
-								   if unichr(n).isdigit()])
+		                           if unichr(n).isdigit()])
 		unicode_number_expr = Regex("[%s]" % unicode_numbers, re.UNICODE)
 		space_char = re.escape(self._grammar.get_token("identifier_spacing"))
 		identifier0 = Regex("[\w%s]+" % space_char, re.UNICODE)
@@ -330,7 +327,7 @@ class Parser(object):
 
 		# --- The full identifier, which could have a namespace:
 		identifier = Combine(namespace.setResultsName("namespace_parts") +
-							 identifier0.setResultsName("identifier"))
+		                     identifier0.setResultsName("identifier"))
 		identifier.setName("full_identifier")
 
 		expop = Literal('^')
@@ -345,7 +342,7 @@ class Parser(object):
 
 		return identifier
 
-	#{ Pyparsing post-parse actions
+	# { Pyparsing post-parse actions
 
 	def make_string(self, tokens):
 		"""Make a String constant using the token passed."""
@@ -358,12 +355,12 @@ class Parser(object):
 	def make_variable(self, tokens):
 		"""Make a variable using the tokens passed."""
 		raise NotImplementedError("It's up to the actual parser to make "
-								  "the variables")
+		                          "the variables")
 
 	def make_function(self, tokens):
 		"""Make a function using the tokens passed."""
 		raise NotImplementedError("It's up to the actual parser to make "
-								  "the functions")
+		                          "the functions")
 
 	def make_set(self, tokens):
 		"""Make a Set using the token passed."""
@@ -426,7 +423,7 @@ class Parser(object):
 
 		return operation
 
-	#}
+	# }
 
 
 class EvaluableParser(Parser):
@@ -466,7 +463,7 @@ class EvaluableParser(Parser):
 		if isinstance(var, type) and issubclass(var, Function):
 			orig_id = self.__get_original_identifier__(tokens)
 			raise BadExpressionError(u'"%s" represents a function, not a '
-									 'variable' % orig_id)
+			                         'variable' % orig_id)
 		return var
 
 	def make_function(self, tokens):
@@ -491,7 +488,7 @@ class EvaluableParser(Parser):
 
 	def __get_original_identifier__(self, tokens):
 		"""Build the original identifier from a Pyparsing ``tokens``."""
-		ns_sep = unicode(self._grammar.get_token("namespace_separator"))
+		ns_sep = str(self._grammar.get_token("namespace_separator"))
 		id_parts = list(tokens.namespace_parts) + [tokens.identifier]
 		id_ = ns_sep.join(id_parts)
 		return id_
@@ -518,17 +515,17 @@ class EvaluableParser(Parser):
 		operand = Combine((integers + Optional(decimals)) | variable)
 
 		expr = operatorPrecedence(operand,
-								  [
-									  (Literal("[").setParseAction(replaceWith("(")), 1, opAssoc.RIGHT),
-									  (Literal("]").setParseAction(replaceWith(")")), 1, opAssoc.LEFT),
-									  ("!", 1, opAssoc.LEFT),
-									  (expop, 2, opAssoc.RIGHT),
-									  (signop, 1, opAssoc.RIGHT),
-									  (multop, 2, opAssoc.LEFT),
-									  (modop, 2, opAssoc.LEFT),
-									  (plusop, 2, opAssoc.LEFT),
-								  ]
-							  )
+		                          [
+			                          (Literal("[").setParseAction(replaceWith("(")), 1, opAssoc.RIGHT),
+			                          (Literal("]").setParseAction(replaceWith(")")), 1, opAssoc.LEFT),
+			                          ("!", 1, opAssoc.LEFT),
+			                          (expop, 2, opAssoc.RIGHT),
+			                          (signop, 1, opAssoc.RIGHT),
+			                          (multop, 2, opAssoc.LEFT),
+			                          (modop, 2, opAssoc.LEFT),
+			                          (plusop, 2, opAssoc.LEFT),
+		                          ]
+		                          )
 		a = expr.parseString(tokens[0], parseAll=True)
 		return Arithmetic(a[0], self._namespace, self._grammar.get_token("namespace_separator"))
 
@@ -549,6 +546,5 @@ class ConvertibleParser(Parser):
 		"""Make a Placeholder function using the token passed."""
 		function = tokens.function_name
 		return PlaceholderFunction(function.identifier,
-								   function.namespace_parts,
-								   *tokens.arguments)
-
+		                           function.namespace_parts,
+		                           *tokens.arguments)

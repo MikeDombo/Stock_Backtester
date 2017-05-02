@@ -14,7 +14,7 @@ def generate_sold_stocks(data_dir, date_fmt, columns, num_to_buy):
 	bought_stocks = []
 	if not os.path.isfile("date_keyed.pkl"):
 		if not os.path.isdir(data_dir):
-			logger.error("Directory "+str(data_dir)+" does not exist!")
+			logger.error("Directory " + str(data_dir) + " does not exist!")
 			sys.exit(2)
 		symbol_keyed = {}
 		regex = r"table_([\w\d\.]+)\.csv"
@@ -57,13 +57,13 @@ def generate_sold_stocks(data_dir, date_fmt, columns, num_to_buy):
 		change_bought_on = buy_order["change"]
 		rank = buy_order["rank"]
 
-		date_plus_month = market_day(date+relativedelta(months=1), market_data_days)
-		date_plus_6_months = market_day(date+relativedelta(months=6), market_data_days)
+		date_plus_month = market_day(date + relativedelta(months=1), market_data_days)
+		date_plus_6_months = market_day(date + relativedelta(months=6), market_data_days)
 		date_plus_year = market_day(date + relativedelta(years=1), market_data_days)
 		date_plus_5_years = market_day(date + relativedelta(years=5), market_data_days)
 
 		sell_order = {"symbol": symbol, "buy_date": date, "buy_price": buy_price, "buy_change": change_bought_on,
-					  "sell_month": 0, "sell_6_months": 0, "sell_year": 0, "sell_5_years": 0, "buy_rank": rank}
+		              "sell_month": 0, "sell_6_months": 0, "sell_year": 0, "sell_5_years": 0, "buy_rank": rank}
 
 		if date_plus_month is not False and date_plus_month is not None:
 			if symbol in date_keyed[date_plus_month]:
@@ -122,7 +122,7 @@ def find_bought_stocks(date_keyed, length):
 			a = find_biggest_losers(symbol_data, length)
 			for symbol, rank in a:
 				bought_stocks += [{'symbol': symbol, 'price': symbol_data[symbol]['close'],
-								   'change': symbol_data[symbol]['change'], 'day': date, 'rank': rank}]
+				                   'change': symbol_data[symbol]['change'], 'day': date, 'rank': rank}]
 		# Sort the bought stocks by date of purchase
 		bought_stocks = sorted(bought_stocks, key=lambda k: k['day'])
 
@@ -160,7 +160,7 @@ def percent_change(open, close):
 		return None
 	if open == 0:
 		return 0
-	return (close-open)/open
+	return (close - open) / open
 
 
 def process_csv(fn, date_fmt, columns):
@@ -197,22 +197,23 @@ def analyze_trades(sold_stocks=None):
 	os.makedirs(new_dir)
 
 	column_names = ["Symbol", "Buy Date", "Change on Buy Date", "Rank", "Buy Price",
-					 "Sell 1 Month Change", "Sell 6 Months Change",
-					 "Sell 1 Year Change", "Sell 5 Years Change",
-					 "Sell 1 Month Price", "Sell 6 Months Price",
-					 "Sell 1 Year Price", "Sell 5 Years Price"
-					 ]
+	                "Sell 1 Month Change", "Sell 6 Months Change",
+	                "Sell 1 Year Change", "Sell 5 Years Change",
+	                "Sell 1 Month Price", "Sell 6 Months Price",
+	                "Sell 1 Year Price", "Sell 5 Years Price"
+	                ]
 	numeric_columns = ["Change on Buy Date", "Buy Price", "Sell 1 Month Change", "Sell 6 Months Change",
-					"Sell 1 Year Change", "Sell 5 Years Change", "Sell 1 Month Price", "Sell 6 Months Price",
-					"Sell 1 Year Price", "Sell 5 Years Price"
-					]
+	                   "Sell 1 Year Change", "Sell 5 Years Change", "Sell 1 Month Price", "Sell 6 Months Price",
+	                   "Sell 1 Year Price", "Sell 5 Years Price"
+	                   ]
 	import Statistics
 	stock_stats = Statistics.Statistics(column_names)
 
 	row_count = 0
 	for sheet_num in range(0, (len(sold_stocks) / 1048000) + 1):
-		csv_filename = os.path.join(new_dir, "stock_sales_"+str(sheet_num)+".csv")
-		logger.info("Writing to CSV: "+csv_filename+". Number "+str(sheet_num + 1)+" of "+str((len(sold_stocks) / 1048000)+1))
+		csv_filename = os.path.join(new_dir, "stock_sales_" + str(sheet_num) + ".csv")
+		logger.info("Writing to CSV: " + csv_filename + ". Number " + str(sheet_num + 1) + " of " + str(
+			(len(sold_stocks) / 1048000) + 1))
 		with open(csv_filename, "wb") as csvF:
 			writer = csv.writer(csvF)
 			writer.writerow(column_names)
@@ -224,26 +225,28 @@ def analyze_trades(sold_stocks=None):
 					continue
 				if count > 1048000 * (sheet_num + 1):
 					break
-				row_data = [stock["symbol"], stock["buy_date"], stock["buy_change"], stock["buy_rank"], stock["buy_price"],
-							 percent_change(stock["buy_price"], stock["sell_month"]),
-							 percent_change(stock["buy_price"], stock["sell_6_months"]),
-							 percent_change(stock["buy_price"], stock["sell_year"]),
-							 percent_change(stock["buy_price"], stock["sell_5_years"]),
-							 stock["sell_month"], stock["sell_6_months"], stock["sell_year"], stock["sell_5_years"]
-							 ]
+				row_data = [stock["symbol"], stock["buy_date"], stock["buy_change"], stock["buy_rank"],
+				            stock["buy_price"],
+				            percent_change(stock["buy_price"], stock["sell_month"]),
+				            percent_change(stock["buy_price"], stock["sell_6_months"]),
+				            percent_change(stock["buy_price"], stock["sell_year"]),
+				            percent_change(stock["buy_price"], stock["sell_5_years"]),
+				            stock["sell_month"], stock["sell_6_months"], stock["sell_year"], stock["sell_5_years"]
+				            ]
 				writer.writerow(row_data)
 				stock_stats.add_data_multi(numeric_columns, [stock["buy_change"], stock["buy_price"],
-							 percent_change(stock["buy_price"], stock["sell_month"]),
-							 percent_change(stock["buy_price"], stock["sell_6_months"]),
-							 percent_change(stock["buy_price"], stock["sell_year"]),
-							 percent_change(stock["buy_price"], stock["sell_5_years"]),
-							 stock["sell_month"], stock["sell_6_months"], stock["sell_year"], stock["sell_5_years"]
-							 ])
+				                                             percent_change(stock["buy_price"], stock["sell_month"]),
+				                                             percent_change(stock["buy_price"], stock["sell_6_months"]),
+				                                             percent_change(stock["buy_price"], stock["sell_year"]),
+				                                             percent_change(stock["buy_price"], stock["sell_5_years"]),
+				                                             stock["sell_month"], stock["sell_6_months"],
+				                                             stock["sell_year"], stock["sell_5_years"]
+				                                             ])
 				count += 1
 				row_count += 1
 
 	for name in numeric_columns:
-		print(name+" :\t%s" % stock_stats.get_stats(name))
+		print(name + " :\t%s" % stock_stats.get_stats(name))
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s | %(message)s')
@@ -253,8 +256,10 @@ if __name__ == '__main__':
 		parser = argparse.ArgumentParser(description='Process Stock Data')
 		parser.add_argument('-d', '--directory', type=str, nargs=1, help='Directory containing csv files of stock data')
 		parser.add_argument('-df', '--csv_date_format', type=str, nargs='+', help='Python string format for date')
-		parser.add_argument('-oc', '--open_column', type=int, nargs=1, help='Zero-indexed CSV column for the open price')
-		parser.add_argument('-cc', '--close_column', type=int, nargs=1, help='Zero-indexed CSV column for the close price')
+		parser.add_argument('-oc', '--open_column', type=int, nargs=1,
+		                    help='Zero-indexed CSV column for the open price')
+		parser.add_argument('-cc', '--close_column', type=int, nargs=1,
+		                    help='Zero-indexed CSV column for the close price')
 		parser.add_argument('-dc', '--date_column', type=int, nargs=1, help='Zero-indexed CSV column for the date')
 		parser.add_argument('-n', '--num_to_buy', type=int, nargs=1, help='Number of stocks to buy per day')
 

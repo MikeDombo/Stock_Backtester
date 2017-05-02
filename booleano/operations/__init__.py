@@ -37,37 +37,30 @@ using the classes provided by this package.
 
 from booleano.exc import InvalidOperationError
 
-
 __all__ = (
-    # Operands:
-    "Arithmetic", "String", "Number", "Set", "Variable", "Function", "PlaceholderVariable",
-    "PlaceholderFunction",
-    # Operators:
-    "Not", "And", "Or", "Xor", "Equal", "NotEqual", "LessThan", "GreaterThan",
-    "LessEqual", "GreaterEqual", "BelongsTo", "IsSubset",
+	# Operands:
+	"Arithmetic", "String", "Number", "Set", "Variable", "Function", "PlaceholderVariable",
+	"PlaceholderFunction",
+	# Operators:
+	"Not", "And", "Or", "Xor", "Equal", "NotEqual", "LessThan", "GreaterThan",
+	"LessEqual", "GreaterEqual", "BelongsTo", "IsSubset",
 )
 
-
 #: The known/supported operations.
-OPERATIONS = set((
-    "equality",           # ==, !=
-    "inequality",         # >, <, >=, <=
-    "boolean",            # Logical values
-    "membership",         # Set operations (i.e., ∈ and ⊂)
-))
+OPERATIONS = {"equality", "inequality", "boolean", "membership"}
 
 
 class OperationNode(object):
-    """
+	"""
     Base class for the individual elements available in a boolean operation
     (i.e., operands and operations).
     
     It can also be seen as the base class for each node in the parse trees.
     
     """
-    
-    def __call__(self, context):
-        """
+
+	def __call__(self, context):
+		"""
         Evaluate the operation, by passing the ``context`` to the inner
         operands/operators.
         
@@ -77,10 +70,10 @@ class OperationNode(object):
         :rtype: bool
         
         """
-        raise NotImplementedError()
-    
-    def check_logical_support(self):
-        """
+		raise NotImplementedError()
+
+	def check_logical_support(self):
+		"""
         Make sure this node has and can return its logical value.
         
         :raises booleano.exc.InvalidOperationError: If the node is an
@@ -89,11 +82,11 @@ class OperationNode(object):
         All the operators have logical values.
         
         """
-        if self.is_operand():
-            self.check_operation("boolean")
-    
-    def is_leaf(self):
-        """
+		if self.is_operand():
+			self.check_operation("boolean")
+
+	def is_leaf(self):
+		"""
         Check if this is a leaf node.
         
         :rtype: bool
@@ -103,13 +96,10 @@ class OperationNode(object):
         :class:`PlaceholderVariable`.
         
         """
-        if (self.is_operator() or self.__class__ in (Set, PlaceholderFunction)
-            or isinstance(self, Function)):
-            return False
-        return True
-    
-    def is_branch(self):
-        """
+		return not (self.is_operator() or self.__class__ in (Set, PlaceholderFunction) or isinstance(self, Function))
+
+	def is_branch(self):
+		"""
         Check if this is a branch node.
         
         :rtype: bool
@@ -119,28 +109,28 @@ class OperationNode(object):
         :class:`PlaceholderFunction`.
         
         """
-        return not self.is_leaf()
-    
-    def is_operand(self):
-        """
+		return not self.is_leaf()
+
+	def is_operand(self):
+		"""
         Check if this node is an operand.
         
         :rtype: bool
         
         """
-        return isinstance(self, Operand)
-    
-    def is_operator(self):
-        """
+		return isinstance(self, Operand)
+
+	def is_operator(self):
+		"""
         Check if this node is an operation.
         
         :rtype: bool
         
         """
-        return isinstance(self, Operator)
-    
-    def check_equivalence(self, node):
-        """
+		return isinstance(self, Operator)
+
+	def check_equivalence(self, node):
+		"""
         Make sure ``node`` and this node are equivalent.
         
         :param node: The other node which may be equivalent to this one.
@@ -151,12 +141,12 @@ class OperationNode(object):
         attributes specific to such nodes.
         
         """
-        error_msg = 'Nodes "%s" and "%s" are not equivalent'
-        assert isinstance(node, self.__class__), error_msg % (repr(node),
-                                                              repr(self))
-    
-    def __nonzero__(self):
-        """
+		error_msg = 'Nodes "%s" and "%s" are not equivalent'
+		assert isinstance(node, self.__class__), error_msg % (repr(node),
+		                                                      repr(self))
+
+	def __nonzero__(self):
+		"""
         Cancel the pythonic truth evaluation by raising an exception.
         
         :raises InvalidOperationError: To cancel the pythonic truth evaluation.
@@ -168,39 +158,39 @@ class OperationNode(object):
         Operation nodes must be evaluated passing the context explicitly.
         
         """
-        raise InvalidOperationError("Operation nodes do not support Pythonic "
-                                    "truth evaluation")
-    
-    def __eq__(self, other):
-        """
+		raise InvalidOperationError("Operation nodes do not support Pythonic "
+		                            "truth evaluation")
+
+	def __eq__(self, other):
+		"""
         Check if the ``other`` node is equivalent to this one.
         
         :return: Whether they are equivalent.
         :rtype: bool
         
         """
-        try:
-            self.check_equivalence(other)
-            return True
-        except AssertionError:
-            return False
-    
-    def __ne__(self, other):
-        """
+		try:
+			self.check_equivalence(other)
+			return True
+		except AssertionError:
+			return False
+
+	def __ne__(self, other):
+		"""
         Check if the ``other`` node is not equivalent to this one.
         
         :return: Whether they are not equivalent.
         :rtype: bool
         
         """
-        try:
-            self.check_equivalence(other)
-            return False
-        except AssertionError:
-            return True
-    
-    def __str__(self):
-        """
+		try:
+			self.check_equivalence(other)
+			return False
+		except AssertionError:
+			return True
+
+	def __str__(self):
+		"""
         Return the ASCII representation of this node.
         
         :raises NotImplementedError: If the Unicode representation is not
@@ -211,34 +201,34 @@ class OperationNode(object):
         directly.
         
         """
-        as_unicode = self.__unicode__()
-        return str(as_unicode.encode("utf-8"))
-    
-    def __unicode__(self):
-        """
+		as_unicode = self.__unicode__()
+		return str(as_unicode.encode("utf-8"))
+
+	def __unicode__(self):
+		"""
         Return the Unicode representation for this node.
         
         :raises NotImplementedError: If the Unicode representation is not
             yet implemented.
         
         """
-        raise NotImplementedError("Node %s doesn't have an Unicode "
-                                  "representation" % type(self))
-    
-    def __repr__(self):
-        """
+		raise NotImplementedError("Node %s doesn't have an Unicode "
+		                          "representation" % type(self))
+
+	def __repr__(self):
+		"""
         Raise a NotImplementedError to force descendants to set the 
         representation explicitly.
         
         """
-        raise NotImplementedError("Node %s doesn't have an "
-                                  "representation" % type(self))
+		raise NotImplementedError("Node %s doesn't have an "
+		                          "representation" % type(self))
 
 
 # Importing the built-in operands and operators so they can be available from
 # this namespace:
 from booleano.operations.operands import (Arithmetic, String, Number, Set, Variable,
-    Function, PlaceholderVariable, PlaceholderFunction, Operand)
+                                          Function, PlaceholderVariable, PlaceholderFunction, Operand)
 from booleano.operations.operators import (Not, And, Or, Xor, Equal, NotEqual,
-    LessThan, GreaterThan, LessEqual, GreaterEqual, BelongsTo, IsSubset,
-    Operator)
+                                           LessThan, GreaterThan, LessEqual, GreaterEqual, BelongsTo, IsSubset,
+                                           Operator)

@@ -38,22 +38,21 @@ from booleano.exc import GrammarError
 __all__ = ("EvaluableParseManager", "ConvertibleParseManager", "Grammar",
            "Bind", "SymbolTable")
 
-
 LOGGER = getLogger(__name__)
 
 
 # TODO: Get a better name for this.
 class ParseManager(object):
-    """
+	"""
     Base class for parse managers.
     
     A parse manager controls the parsers to be used in a single kind of
     expression, with one parser per supported grammar.
     
     """
-    
-    def __init__(self, generic_grammar, cache_limit=0, **localized_grammars):
-        """
+
+	def __init__(self, generic_grammar, cache_limit=0, **localized_grammars):
+		"""
         
         :param generic_grammar: The default grammar.
         :type generic_grammar: :class:`Grammar`
@@ -65,14 +64,14 @@ class ParseManager(object):
         where each key represents the locale of the grammar in the value.
         
         """
-        self._cache = _Cache(cache_limit)
-        self._generic_grammar = generic_grammar
-        self._parsers = {}
-        for (locale, grammar) in localized_grammars.items():
-            self.add_parser(locale, grammar)
-    
-    def parse(self, expression, locale=None):
-        """
+		self._cache = _Cache(cache_limit)
+		self._generic_grammar = generic_grammar
+		self._parsers = {}
+		for (locale, grammar) in localized_grammars.items():
+			self.add_parser(locale, grammar)
+
+	def parse(self, expression, locale=None):
+		"""
         Parse ``expression`` and return its parse tree.
         
         :param expression: The expression to be parsed.
@@ -98,18 +97,18 @@ class ParseManager(object):
         returned.
         
         """
-        if self._cache.is_stored(locale, expression):
-            parse_tree = self._cache.get_tree(locale, expression)
-        else:
-            parser = self._get_parser(locale)
-            parse_tree = parser(expression)
-            self._cache.store_tree(locale, expression, parse_tree)
-        return parse_tree
-    
-    #{ Parser management
-    
-    def add_parser(self, locale, grammar):
-        """
+		if self._cache.is_stored(locale, expression):
+			parse_tree = self._cache.get_tree(locale, expression)
+		else:
+			parser = self._get_parser(locale)
+			parse_tree = parser(expression)
+			self._cache.store_tree(locale, expression, parse_tree)
+		return parse_tree
+
+	# { Parser management
+
+	def add_parser(self, locale, grammar):
+		"""
         Create a parser for ``grammar`` and store it.
         
         :param locale: The locale of the ``grammar``.
@@ -118,14 +117,14 @@ class ParseManager(object):
         :type grammar: :class:`Grammar`
         
         """
-        if locale in self._parsers:
-            raise GrammarError("There is already a parser for grammar %s" %
-                               locale)
-        parser = self._define_parser(locale, grammar)
-        self._parsers[locale] = parser
-    
-    def _get_parser(self, locale):
-        """
+		if locale in self._parsers:
+			raise GrammarError("There is already a parser for grammar %s" %
+			                   locale)
+		parser = self._define_parser(locale, grammar)
+		self._parsers[locale] = parser
+
+	def _get_parser(self, locale):
+		"""
         Return the parser for the grammar identifier by ``locale``.
         
         :param locale: The locale of the grammar whose parser is requested.
@@ -137,13 +136,13 @@ class ParseManager(object):
         on the generic grammar.
         
         """
-        if locale not in self._parsers:
-            self.add_parser(locale, self._generic_grammar)
-            LOGGER.info("Generated parser for unknown grammar %s", repr(locale))
-        return self._parsers[locale]
-    
-    def _define_parser(self, locale, grammar):
-        """
+		if locale not in self._parsers:
+			self.add_parser(locale, self._generic_grammar)
+			LOGGER.info("Generated parser for unknown grammar %s", repr(locale))
+		return self._parsers[locale]
+
+	def _define_parser(self, locale, grammar):
+		"""
         Build a parser for ``grammar`` and return it.
         
         :param locale: The locale of the ``grammar``.
@@ -154,23 +153,23 @@ class ParseManager(object):
         :rtype: Parser
         
         """
-        raise NotImplementedError("Actual parse managers must define their "
-                                  "parsers")
-    
-    #}
+		raise NotImplementedError("Actual parse managers must define their "
+		                          "parsers")
+
+	# }
 
 
 class EvaluableParseManager(ParseManager):
-    """
+	"""
     Parsing manager for evaluable operations.
     
     It manages evaluable parsers.
     
     """
-    
-    def __init__(self, symbol_table, generic_grammar, cache_limit=0,
-                 **localized_grammars):
-        """
+
+	def __init__(self, symbol_table, generic_grammar, cache_limit=0,
+	             **localized_grammars):
+		"""
         
         :param symbol_table: The symbol table for the supported expressions.
         :type symbol_table: :class:`SymbolTable`
@@ -184,13 +183,13 @@ class EvaluableParseManager(ParseManager):
         where each key represents the locale of the grammar in the value.
         
         """
-        self._symbol_table = symbol_table
-        super(EvaluableParseManager, self).__init__(generic_grammar,
-                                                    cache_limit,
-                                                    **localized_grammars)
-    
-    def evaluate(self, expression, locale, context):
-        """
+		self._symbol_table = symbol_table
+		super(EvaluableParseManager, self).__init__(generic_grammar,
+		                                            cache_limit,
+		                                            **localized_grammars)
+
+	def evaluate(self, expression, locale, context):
+		"""
         Parse ``expression`` and return its evaluation result with ``context``.
         
         :param expression: The expression to be parsed.
@@ -210,11 +209,11 @@ class EvaluableParseManager(ParseManager):
         :raises ScopeError: If ``expression`` contains unknown identifiers.
         
         """
-        tree = self.parse(expression, locale)
-        return tree(context)
-    
-    def _define_parser(self, locale, grammar):
-        """
+		tree = self.parse(expression, locale)
+		return tree(context)
+
+	def _define_parser(self, locale, grammar):
+		"""
         Build an evaluable parser for ``grammar`` and return it.
         
         :param locale: The locale of the ``grammar``.
@@ -225,21 +224,21 @@ class EvaluableParseManager(ParseManager):
         :rtype: EvaluableParser
         
         """
-        namespace = self._symbol_table.get_namespace(locale)
-        parser = EvaluableParser(grammar, namespace)
-        return parser
+		namespace = self._symbol_table.get_namespace(locale)
+		parser = EvaluableParser(grammar, namespace)
+		return parser
 
 
 class ConvertibleParseManager(ParseManager):
-    """
+	"""
     Parsing manager for convertible operations.
     
     It manages convertible parsers.
     
     """
-    
-    def _define_parser(self, locale, grammar):
-        """
+
+	def _define_parser(self, locale, grammar):
+		"""
         Build a parser for ``grammar`` and return it.
         
         :param locale: The locale of the ``grammar``.
@@ -252,21 +251,21 @@ class ConvertibleParseManager(ParseManager):
         Here the ``locale`` is not used.
         
         """
-        parser = ConvertibleParser(grammar)
-        return parser
+		parser = ConvertibleParser(grammar)
+		return parser
 
 
-#{ Internal stuff
+# { Internal stuff
 
 
 class _Cache(object):
-    """
+	"""
     Cache handling for a parse manager.
     
     """
-    
-    def __init__(self, limit):
-        """
+
+	def __init__(self, limit):
+		"""
         Set up the cache with ``limit``.
         
         :param limit: The maximum amount of expressions that can be cached
@@ -274,13 +273,13 @@ class _Cache(object):
         :type limit: int
         
         """
-        self.limit = limit
-        self.counter = 0
-        self.cache_by_locale = {}
-        self.latest_expressions = []
-    
-    def is_stored(self, locale, expression):
-        """
+		self.limit = limit
+		self.counter = 0
+		self.cache_by_locale = {}
+		self.latest_expressions = []
+
+	def is_stored(self, locale, expression):
+		"""
         Check if ``expression`` has been cached.
         
         :param locale: The locale of the grammar used by ``expression``.
@@ -291,15 +290,15 @@ class _Cache(object):
         :rtype: bool
         
         """
-        stored = False
-        try:
-            stored = expression in self.cache_by_locale[locale]
-        except KeyError:
-            pass
-        return stored
-    
-    def get_tree(self, locale, expression):
-        """
+		stored = False
+		try:
+			stored = expression in self.cache_by_locale[locale]
+		except KeyError:
+			pass
+		return stored
+
+	def get_tree(self, locale, expression):
+		"""
         Return the cached parse tree for ``expression`` in ``locale``.
         
         :param locale: The locale of the grammar used by ``expression``.
@@ -312,12 +311,12 @@ class _Cache(object):
             :meth:`is_stored` first).
         
         """
-        parse_tree = self.cache_by_locale[locale][expression]
-        self.touch_tree(locale, expression)
-        return parse_tree
-    
-    def store_tree(self, locale, expression, parse_tree):
-        """
+		parse_tree = self.cache_by_locale[locale][expression]
+		self.touch_tree(locale, expression)
+		return parse_tree
+
+	def store_tree(self, locale, expression, parse_tree):
+		"""
         Add the ``parse_tree`` of ``expression`` in ``locale`` to the cache.
         
         :param locale: The locale of the grammar used by ``expression``.
@@ -330,19 +329,19 @@ class _Cache(object):
         If caching is disabled, it won't do anything.
         
         """
-        if self.limit == 0:
-            # Cache is disabled.
-            return
-        # Cache is enabled, let's store it:
-        self.remove_oldest()
-        if locale not in self.cache_by_locale:
-            self.cache_by_locale[locale] = {}
-        self.cache_by_locale[locale][expression] = parse_tree
-        self.counter += 1
-        self.touch_tree(locale, expression)
-    
-    def touch_tree(self, locale, expression):
-        """
+		if self.limit == 0:
+			# Cache is disabled.
+			return
+		# Cache is enabled, let's store it:
+		self.remove_oldest()
+		if locale not in self.cache_by_locale:
+			self.cache_by_locale[locale] = {}
+		self.cache_by_locale[locale][expression] = parse_tree
+		self.counter += 1
+		self.touch_tree(locale, expression)
+
+	def touch_tree(self, locale, expression):
+		"""
         Mark ``expression`` in ``locale`` as the latest used item in the cache.
         
         :param locale: The locale of the grammar used by ``expression``.
@@ -351,29 +350,28 @@ class _Cache(object):
         :type expression: basestring
         
         """
-        tree_indexes = (locale, expression)
-        if tree_indexes in self.latest_expressions:
-            # Removing the existing occurence:
-            self.latest_expressions.remove(tree_indexes)
-        self.latest_expressions.insert(0, tree_indexes)
-    
-    def remove_oldest(self):
-        """
+		tree_indexes = (locale, expression)
+		if tree_indexes in self.latest_expressions:
+			# Removing the existing occurence:
+			self.latest_expressions.remove(tree_indexes)
+		self.latest_expressions.insert(0, tree_indexes)
+
+	def remove_oldest(self):
+		"""
         Remove the oldest item in the cache.
         
         It won't do anything if there's no caching limit, the limit has not
         been reached or there's nothing cached.
         
         """
-        if (self.limit is None or self.counter < self.limit or
-            not self.latest_expressions):
-            return
-        (locale, expression) = self.latest_expressions.pop(-1)
-        del self.cache_by_locale[locale][expression]
-        self.counter -= 1
+		if self.limit is None or self.counter < self.limit or not self.latest_expressions:
+			return
+		(locale, expression) = self.latest_expressions.pop(-1)
+		del self.cache_by_locale[locale][expression]
+		self.counter -= 1
 
 
-#}
+# }
 
 
 # Importing the objects to be available from this namespace:

@@ -91,7 +91,7 @@ class Constant(Operand):
 		super(Constant, self).check_equivalence(node)
 		assert node.constant_value == self.constant_value, \
 			u'Constants %s and %s represent different values' % (self,
-																 node)
+			                                                     node)
 
 
 class String(Constant):
@@ -141,12 +141,12 @@ class String(Constant):
 		have to be a :class:`basestring` initially.
 
 		"""
-		string = unicode(string)
+		string = str(string)
 		super(String, self).__init__(string)
 
 	def equals(self, value, context):
 		"""Turn ``value`` into a string if it isn't a string yet"""
-		value = unicode(value)
+		value = str(value)
 		return super(String, self).equals(value, context)
 
 	def __unicode__(self):
@@ -198,7 +198,7 @@ class ArithmeticVariable(object):
 				else:
 					temp.append(t)
 			return temp
-		elif len(re.findall("[a-zA-Z"+self.namespace_separator+"]+", number)) > 0:
+		elif len(re.findall("[a-zA-Z" + self.namespace_separator + "]+", number)) > 0:
 			var = str(number).split(self.namespace_separator)
 			variable_namespaces = var[0:-1]
 			variable_name = var[-1]
@@ -206,13 +206,13 @@ class ArithmeticVariable(object):
 		return temp
 
 	@classmethod
-	def flatten(cls, S):
+	def flatten(cls, s):
 		from pyparsing import ParseResults
-		if S == []:
-			return S
-		if isinstance(S[0], ParseResults):
-			return cls.flatten(S[0]) + cls.flatten(S[1:])
-		return S[:1] + cls.flatten(S[1:])
+		if s == []:
+			return s
+		if isinstance(s[0], ParseResults):
+			return cls.flatten(s[0]) + cls.flatten(s[1:])
+		return s[:1] + cls.flatten(s[1:])
 
 	def replace(self, num, context, namespace=True):
 		for k, v in self.required_variables.items():
@@ -323,7 +323,7 @@ class Arithmetic(Constant):
 	def __unicode__(self):
 		"""Return the Unicode representation of this constant number."""
 		print("constant unicode")
-		return unicode(self.constant_value)
+		return str(self.constant_value)
 
 	def __repr__(self):
 		"""Return the representation for this constant number."""
@@ -410,7 +410,7 @@ class Number(Constant):
 
 	def __unicode__(self):
 		"""Return the Unicode representation of this constant number."""
-		return unicode(self.constant_value)
+		return str(self.constant_value)
 
 	def __repr__(self):
 		"""Return the representation for this constant number."""
@@ -438,8 +438,8 @@ class Set(Constant):
 		for item in items:
 			if not isinstance(item, Operand):
 				raise InvalidOperationError('Item "%s" is not an operand, so '
-											'it cannot be a member of a set' %
-											item)
+				                            'it cannot be a member of a set' %
+				                            item)
 		super(Set, self).__init__(set(items))
 
 	def to_python(self, context):
@@ -530,7 +530,7 @@ class Set(Constant):
 
 	def __unicode__(self):
 		"""Return the Unicode representation of this constant set."""
-		elements = [unicode(element) for element in self.constant_value]
+		elements = [str(element) for element in self.constant_value]
 		elements = u", ".join(elements)
 		return "{%s}" % elements
 
@@ -563,6 +563,6 @@ class Set(Constant):
 			is_int = False
 		if not is_int:
 			raise InvalidOperationError("To compare the amount of items in a "
-										"set, the operand %s has to be an "
-										"integer" % repr(value))
+			                            "set, the operand %s has to be an "
+			                            "integer" % repr(value))
 		return value_as_int

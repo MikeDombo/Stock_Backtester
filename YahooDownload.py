@@ -1,4 +1,9 @@
-import urllib2
+try:
+	# For Python 3.0 and later
+	from urllib.request import urlopen, HTTPError
+except ImportError:
+	# Fall back to Python 2's urllib2
+	from urllib2 import urlopen, HTTPError
 import time
 import random
 import os
@@ -10,14 +15,14 @@ baseURL = "https://ichart.finance.yahoo.com/table.csv?g=d&s="
 
 def download_symbol_history(download_directory, symbol):
 	try:
-		u = urllib2.urlopen(baseURL+symbol)
+		u = urlopen(baseURL+symbol)
 		if not os.path.exists(download_directory):
 			os.makedirs(download_directory)
 		file = open(download_directory+"/table_"+symbol+".csv", 'wb')
 		file.write(u.read())
 		file.close()
 		return True
-	except urllib2.HTTPError as e:
+	except HTTPError as e:
 		if e.code == 404:
 			print("Could not find data for symbol: "+symbol)
 			return False

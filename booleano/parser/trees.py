@@ -102,7 +102,7 @@ class EvaluableParseTree(ParseTree):
     
     def __unicode__(self):
         """Return the Unicode representation for this tree."""
-        return "Evaluable parse tree (%s)" % unicode(self.root_node)
+        return "Evaluable parse tree (%s)" % str(self.root_node)
     
     def __repr__(self):
         """Return the representation for this tree."""
@@ -129,7 +129,7 @@ class ConvertibleParseTree(ParseTree):
     
     def __unicode__(self):
         """Return the Unicode representation for this tree."""
-        return "Convertible parse tree (%s)" % unicode(self.root_node)
+        return "Convertible parse tree (%s)" % str(self.root_node)
     
     def __repr__(self):
         """Return the representation for this tree."""

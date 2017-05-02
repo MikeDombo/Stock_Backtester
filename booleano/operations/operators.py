@@ -39,23 +39,23 @@ __all__ = ("Not", "And", "Or", "Xor", "Equal", "NotEqual", "LessThan",
 
 
 class Operator(OperationNode):
-    """
+	"""
     Base class for logical operators.
     
     The operands to be used by the operator must be passed in the constructor.
     
     """
-    pass
+	pass
 
 
 class UnaryOperator(Operator):
-    """
+	"""
     Base class for unary logical operators.
     
     """
-    
-    def __init__(self, operand):
-        """
+
+	def __init__(self, operand):
+		"""
         Check that ``operand`` supports all the required operations before
         storing it.
         
@@ -63,10 +63,10 @@ class UnaryOperator(Operator):
         :type operand: :class:`booleano.operations.operands.Operand`
         
         """
-        self.operand = operand
-    
-    def check_equivalence(self, node):
-        """
+		self.operand = operand
+
+	def check_equivalence(self, node):
+		"""
         Make sure unary operator ``node`` and this unary operator are
         equivalent.
         
@@ -76,27 +76,27 @@ class UnaryOperator(Operator):
             an unary operator but doesn't have the same operand as this one.
         
         """
-        super(UnaryOperator, self).check_equivalence(node)
-        assert node.operand == self.operand, \
-               'Operands of unary operations %s and %s are not equivalent' % \
-               (node, self)
-    
-    def __unicode__(self):
-        """
+		super(UnaryOperator, self).check_equivalence(node)
+		assert node.operand == self.operand, \
+			'Operands of unary operations %s and %s are not equivalent' % \
+			(node, self)
+
+	def __unicode__(self):
+		"""
         Return the Unicode representation for this operator and its operand.
         
         """
-        operand = unicode(self.operand)
-        return u"%s(%s)" % (self.__class__.__name__, operand)
-    
-    def __repr__(self):
-        """Return the representation for this operator and its operand."""
-        operand = repr(self.operand)
-        return "<%s %s>" % (self.__class__.__name__, operand)
+		operand = str(self.operand)
+		return u"%s(%s)" % (self.__class__.__name__, operand)
+
+	def __repr__(self):
+		"""Return the representation for this operator and its operand."""
+		operand = repr(self.operand)
+		return "<%s %s>" % (self.__class__.__name__, operand)
 
 
 class BinaryOperator(Operator):
-    """
+	"""
     Base class for binary logical operators.
     
     In binary operations, the two operands are marked as "master" or "slave".
@@ -113,9 +113,9 @@ class BinaryOperator(Operator):
         The instance attribute that represents the slave operand.
     
     """
-    
-    def __init__(self, left_operand, right_operand):
-        """
+
+	def __init__(self, left_operand, right_operand):
+		"""
         Instantiate this operator, finding the master operand among
         ``left_operand`` and ``right_operand``.
         
@@ -125,12 +125,12 @@ class BinaryOperator(Operator):
         :type right_operand: :class:`booleano.operations.operands.Operand`
         
         """
-        master, slave = self.organize_operands(left_operand, right_operand)
-        self.master_operand = master
-        self.slave_operand = slave
-    
-    def organize_operands(self, left_operand, right_operand):
-        """
+		master, slave = self.organize_operands(left_operand, right_operand)
+		self.master_operand = master
+		self.slave_operand = slave
+
+	def organize_operands(self, left_operand, right_operand):
+		"""
         Find the master and slave operands among the ``left_operand`` and 
         ``right_operand`` operands.
         
@@ -150,20 +150,20 @@ class BinaryOperator(Operator):
         operand becomes the master and the right-hand operand becomes the slave.
         
         """
-        l_var = isinstance(left_operand, Variable)
-        r_var = isinstance(right_operand, Variable)
-        
-        if l_var == r_var or l_var:
-            # Both operands are variable/constant, OR the left-hand operand is 
-            # a variable and the right-hand operand is a constant.
-            return (left_operand, right_operand)
-        
-        # The right-hand operand is the variable and the left-hand operand the
-        # constant:
-        return (right_operand, left_operand)
-    
-    def check_equivalence(self, node):
-        """
+		l_var = isinstance(left_operand, Variable)
+		r_var = isinstance(right_operand, Variable)
+
+		if l_var == r_var or l_var:
+			# Both operands are variable/constant, OR the left-hand operand is
+			# a variable and the right-hand operand is a constant.
+			return left_operand, right_operand
+
+		# The right-hand operand is the variable and the left-hand operand the
+		# constant:
+		return right_operand, left_operand
+
+	def check_equivalence(self, node):
+		"""
         Make sure binary operator ``node`` and this binary operator are
         equivalent.
         
@@ -173,94 +173,94 @@ class BinaryOperator(Operator):
             an binary operator but doesn't have the same operands as this one.
         
         """
-        super(BinaryOperator, self).check_equivalence(node)
-        same_operands = (
-            (node.master_operand == self.master_operand and
-             node.slave_operand == self.slave_operand)
-            or
-            (node.master_operand == self.slave_operand and
-             self.master_operand == node.slave_operand)
-        )
-        assert same_operands, \
-               'Operands of binary operations %s and %s are not equivalent' % \
-               (node, self)
-    
-    def __unicode__(self):
-        """
+		super(BinaryOperator, self).check_equivalence(node)
+		same_operands = (
+			(node.master_operand == self.master_operand and
+			 node.slave_operand == self.slave_operand)
+			or
+			(node.master_operand == self.slave_operand and
+			 self.master_operand == node.slave_operand)
+		)
+		assert same_operands, \
+			'Operands of binary operations %s and %s are not equivalent' % \
+			(node, self)
+
+	def __unicode__(self):
+		"""
         Return the Unicode representation for this binary operator, including
         its operands.
         
         """
-        return u"%s(%s, %s)" % (self.__class__.__name__, self.master_operand,
-                                self.slave_operand)
-    
-    def __repr__(self):
-        """
+		return u"%s(%s, %s)" % (self.__class__.__name__, self.master_operand,
+		                        self.slave_operand)
+
+	def __repr__(self):
+		"""
         Return the representation for this binary operator, including its
         operands.
         
         """
-        return "<%s %s %s>" % (self.__class__.__name__,
-                               repr(self.master_operand),
-                               repr(self.slave_operand))
+		return "<%s %s %s>" % (self.__class__.__name__,
+		                       repr(self.master_operand),
+		                       repr(self.slave_operand))
 
 
-#{ Unary operators
+# { Unary operators
 
 
 class Not(UnaryOperator):
-    """
+	"""
     The logical negation (``~``).
     
     Negate the boolean representation of an operand.
     
     """
-    
-    def __init__(self, operand):
-        """
+
+	def __init__(self, operand):
+		"""
         
         :raises booleano.exc.InvalidOperationError: If ``operand`` doesn't have
             a logical value.
         
         """
-        operand.check_logical_support()
-        super(Not, self).__init__(operand)
-    
-    def __call__(self, context):
-        """
+		operand.check_logical_support()
+		super(Not, self).__init__(operand)
+
+	def __call__(self, context):
+		"""
         Return the negate of the truth value for the operand.
         
         :param context: The evaluation context.
         :type context: object
         
         """
-        return not self.operand(context)
+		return not self.operand(context)
 
 
-#{ Binary operators
+# { Binary operators
 
 
 class _ConnectiveOperator(BinaryOperator):
-    """
+	"""
     Logic connective to turn the left-hand and right-hand operands into
     boolean operations, so we can manipulate their truth value easily.
     
     """
-    
-    def __init__(self, left_operand, right_operand):
-        """
+
+	def __init__(self, left_operand, right_operand):
+		"""
         
         :raises booleano.exc.InvalidOperationError: If ``left_operand`` or 
             ``right_operand`` doesn't have logical values.
         
         """
-        left_operand.check_logical_support()
-        right_operand.check_logical_support()
-        super(_ConnectiveOperator, self).__init__(left_operand, right_operand)
+		left_operand.check_logical_support()
+		right_operand.check_logical_support()
+		super(_ConnectiveOperator, self).__init__(left_operand, right_operand)
 
 
 class And(_ConnectiveOperator):
-    """
+	"""
     The logical conjunction (``AND``).
     
     Connective that checks if two operations evaluate to ``True``.
@@ -269,20 +269,20 @@ class And(_ConnectiveOperator):
     operations.
     
     """
-    
-    def __call__(self, context):
-        """
+
+	def __call__(self, context):
+		"""
         Check if both operands evaluate to ``True``.
         
         :param context: The evaluation context.
         :type context: objects
         
         """
-        return self.master_operand(context) and self.slave_operand(context)
+		return self.master_operand(context) and self.slave_operand(context)
 
 
 class Or(_ConnectiveOperator):
-    """
+	"""
     The logical inclusive disjunction (``OR``).
     
     Connective that check if at least one, out of two operations, evaluate to
@@ -292,20 +292,20 @@ class Or(_ConnectiveOperator):
     operations.
     
     """
-    
-    def __call__(self, context):
-        """
+
+	def __call__(self, context):
+		"""
         Check if at least one of the operands evaluate to ``True``.
         
         :param context: The evaluation context.
         :type context: object
         
         """
-        return self.master_operand(context) or self.slave_operand(context)
+		return self.master_operand(context) or self.slave_operand(context)
 
 
 class Xor(_ConnectiveOperator):
-    """
+	"""
     The logical exclusive disjunction (``XOR``).
     
     Connective that checks if only one, out of two operations, evaluate to
@@ -315,20 +315,20 @@ class Xor(_ConnectiveOperator):
     operations.
     
     """
-    
-    def __call__(self, context):
-        """
+
+	def __call__(self, context):
+		"""
         Check that only one of the operands evaluate to ``True``.
         
         :param context: The evaluation context.
         :type context: object
         
         """
-        return self.master_operand(context) ^ self.slave_operand(context)
+		return self.master_operand(context) ^ self.slave_operand(context)
 
 
 class Equal(BinaryOperator):
-    """
+	"""
     The equality operator (``==``).
     
     Checks that two operands are equivalent.
@@ -336,9 +336,9 @@ class Equal(BinaryOperator):
     For example: ``3 == 3``.
     
     """
-    
-    def __init__(self, left_operand, right_operand):
-        """
+
+	def __init__(self, left_operand, right_operand):
+		"""
         
         :param left_operand: The left-hand operand handled by this operator.
         :type left_operand: :class:`booleano.operations.operands.Operand`
@@ -349,17 +349,17 @@ class Equal(BinaryOperator):
             equality operations.
         
         """
-        super(Equal, self).__init__(left_operand, right_operand)
-        self.master_operand.check_operation("equality")
-    
-    def __call__(self, context):
-        value = self.slave_operand.to_python(context)
-        return self.master_operand.equals(value, context)
+		super(Equal, self).__init__(left_operand, right_operand)
+		self.master_operand.check_operation("equality")
+
+	def __call__(self, context):
+		value = self.slave_operand.to_python(context)
+		return self.master_operand.equals(value, context)
 
 
 # (x <> y) <=> ~(x == y)
 class NotEqual(Equal):
-    """
+	"""
     The "not equal to" operator (``!=``).
     
     Checks that two operands are not equivalent.
@@ -367,20 +367,20 @@ class NotEqual(Equal):
     For example: ``3 != 2``.
     
     """
-    
-    def __call__(self, context):
-        return not super(NotEqual, self).__call__(context)
+
+	def __call__(self, context):
+		return not super(NotEqual, self).__call__(context)
 
 
 class _InequalityOperator(BinaryOperator):
-    """
+	"""
     Handle inequalities (``<``, ``>``) and switch the operation if the operands
     are rearranged.
     
     """
-    
-    def __init__(self, left_operand, right_operand, comparison):
-        """
+
+	def __init__(self, left_operand, right_operand, comparison):
+		"""
         Switch the ``comparison`` if the operands are rearranged.
         
         :param left_operand: The original left-hand operand in the inequality.
@@ -398,133 +398,131 @@ class _InequalityOperator(BinaryOperator):
         to be calculated on a per evaluation basis.
         
         """
-        super(_InequalityOperator, self).__init__(left_operand, right_operand)
-        
-        self.master_operand.check_operation("inequality")
-        
-        if left_operand != self.master_operand:
-            # The operands have been rearranged! Let's invert the comparison:
-            if comparison == "<":
-                comparison = ">"
-            else:
-                comparison = "<"
-        
-        # "Compiling" the comparison:
-        if comparison == ">":
-            self.comparison = self._greater_than
-        else:
-            self.comparison = self._less_than
-    
-    def __call__(self, context):
-        return self.comparison(context)
-    
-    def _greater_than(self, context):
-        """Check if the master operand is greater than the slave"""
-        value = self.slave_operand.to_python(context)
-        return self.master_operand.greater_than(value, context)
-    
-    def _less_than(self, context):
-        """Check if the master operand is less than the slave"""
-        value = self.slave_operand.to_python(context)
-        return self.master_operand.less_than(value, context)
+		super(_InequalityOperator, self).__init__(left_operand, right_operand)
+
+		self.master_operand.check_operation("inequality")
+
+		if left_operand != self.master_operand:
+			# The operands have been rearranged! Let's invert the comparison:
+			if comparison == "<":
+				comparison = ">"
+			else:
+				comparison = "<"
+
+		# "Compiling" the comparison:
+		if comparison == ">":
+			self.comparison = self._greater_than
+		else:
+			self.comparison = self._less_than
+
+	def __call__(self, context):
+		return self.comparison(context)
+
+	def _greater_than(self, context):
+		"""Check if the master operand is greater than the slave"""
+		value = self.slave_operand.to_python(context)
+		return self.master_operand.greater_than(value, context)
+
+	def _less_than(self, context):
+		"""Check if the master operand is less than the slave"""
+		value = self.slave_operand.to_python(context)
+		return self.master_operand.less_than(value, context)
 
 
 class LessThan(_InequalityOperator):
-    """
+	"""
     The "less than" operator (``<``).
     
     For example: ``2 < 3``.
     
     """
-    
-    def __init__(self, left_operand, right_operand):
-        super(LessThan, self).__init__(left_operand, right_operand, "<")
+
+	def __init__(self, left_operand, right_operand):
+		super(LessThan, self).__init__(left_operand, right_operand, "<")
 
 
 class GreaterThan(_InequalityOperator):
-    """
+	"""
     The "greater than" operator (``>``).
     
     For example: ``3 > 2``.
     
     """
-    
-    def __init__(self, left_operand, right_operand):
-        super(GreaterThan, self).__init__(left_operand, right_operand,
-                                                  ">")
+
+	def __init__(self, left_operand, right_operand):
+		super(GreaterThan, self).__init__(left_operand, right_operand, ">")
 
 
 # (x <= y) <=> ~(x > y)
 class LessEqual(GreaterThan):
-    """
+	"""
     The "less than or equal to" operator (``<=``).
     
     For example: ``2 <= 3``.
     
     """
-    
-    def __call__(self, context):
-        return not super(LessEqual, self).__call__(context)
+
+	def __call__(self, context):
+		return not super(LessEqual, self).__call__(context)
 
 
 # (x >= y) <=> ~(x < y)
 class GreaterEqual(LessThan):
-    """
+	"""
     The "greater than or equal to" operator (``>=``).
     
     For example: ``2 >= 2``.
     
     """
-    
-    def __call__(self, context):
-        return not super(GreaterEqual, self).__call__(context)
+
+	def __call__(self, context):
+		return not super(GreaterEqual, self).__call__(context)
 
 
 class _SetOperator(BinaryOperator):
-    """
+	"""
     Base class for set-related operators.
     
     """
-    
-    def __init__(self, left_operand, right_operand):
-        """
+
+	def __init__(self, left_operand, right_operand):
+		"""
         
         :raises booleano.exc.InvalidOperationError: If ``right_operand``
             doesn't support membership operations.
         
         """
-        super(_SetOperator, self).__init__(left_operand, right_operand)
-        self.master_operand.check_operation("membership")
-    
-    def organize_operands(self, left_operand, right_operand):
-        """Set the set (right-hand operand) as the master operand."""
-        return (right_operand, left_operand)
+		super(_SetOperator, self).__init__(left_operand, right_operand)
+		self.master_operand.check_operation("membership")
+
+	def organize_operands(self, left_operand, right_operand):
+		"""Set the set (right-hand operand) as the master operand."""
+		return right_operand, left_operand
 
 
 class BelongsTo(_SetOperator):
-    """
+	"""
     The "belongs to" operator (``∈``).
     
     For example: ``"valencia" ∈ {"caracas", "maracay", "valencia"}``.
     
     """
-    
-    def __call__(self, context):
-        value = self.slave_operand.to_python(context)
-        return self.master_operand.belongs_to(value, context)
+
+	def __call__(self, context):
+		value = self.slave_operand.to_python(context)
+		return self.master_operand.belongs_to(value, context)
 
 
 class IsSubset(_SetOperator):
-    """
+	"""
     The "is a subset of" operator (``⊂``).
     
     For example: ``{"valencia", "aragua"} ⊂ {"caracas", "aragua", "valencia"}``.
     
     """
-    
-    def __call__(self, context):
-        value = self.slave_operand.to_python(context)
-        return self.master_operand.is_subset(value, context)
 
+	def __call__(self, context):
+		value = self.slave_operand.to_python(context)
+		return self.master_operand.is_subset(value, context)
 
-#}
+# }

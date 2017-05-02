@@ -28,8 +28,11 @@
 
 # Namespace package here! See:
 # http://peak.telecommunity.com/DevCenter/setuptools#namespace-packages
-try: #pragma: no cover
-    __import__('pkg_resources').declare_namespace(__name__)
-except ImportError: #pragma: no cover
-    from pkgutil import extend_path
-    __path__ = extend_path(__path__, __name__)
+try:
+	# pragma: no cover
+	__import__('pkg_resources').declare_namespace(__name__)
+except ImportError:
+	# pragma: no cover
+	from pkgutil import extend_path
+
+	__path__ = extend_path(__path__, __name__)

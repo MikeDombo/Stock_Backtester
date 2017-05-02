@@ -1,4 +1,3 @@
-
 class Statistics(object):
 	__stats = {}
 

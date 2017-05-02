@@ -13,8 +13,7 @@ historical stock data to test your buying and selling techniques to optimize you
 ## backtest.py Commandline Parameters
 - -h, --help (Help). Show help information.
 - -d DIRECTORY, --directory DIRECTORY. Directory containing csv files of stock data.
--  -b BUY_CONDITIONS, --buy_conditions BUY_CONDITIONS. Conditions under which a stock should be purchased (already owned stocks will not
-   be purchased again.
+-  -b BUY_CONDITIONS, --buy_conditions BUY_CONDITIONS. Conditions under which a stock should be purchased (already owned stocks will not be purchased again.
 -  -s SELL_CONDITIONS, --sell_conditions SELL_CONDITIONS. Conditions under which an owned stock should be sold.
 -  -df CSV_DATE_FORMAT, --csv_date_format CSV_DATE_FORMAT. Python string format for date. Ex. "%Y%m%d" for dates like 19900223.
 -  -oc OPEN_COLUMN, --open_column OPEN_COLUMN. Zero-indexed CSV column for the open price.
@@ -22,7 +21,7 @@ historical stock data to test your buying and selling techniques to optimize you
 -  -dc DATE_COLUMN, --date_column DATE_COLUMN. Zero-indexed CSV column for the date.
 
 ## Detail on Buy/Sell Conditions
-Conditionals are C/Java style, not Python style. That means you can write a combination of conditions as such: 
+Conditionals are not Python style. You can write a combination of conditions as such: 
 `stock:decrease_rank <= 20 && stock:price <= 100`. Supported boolean operations are AND (&&), OR (||), and NOT (~).
 
 ### Membership

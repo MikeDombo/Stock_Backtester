@@ -72,21 +72,21 @@ class StockIncreaseRank(Variable):
 
 	def equals(self, value, context):
 		actual = self.to_python(context)
-		expected = float(value)
+		expected = int(value)
 		return actual == expected
 
 	def greater_than(self, value, context):
 		actual = self.to_python(context)
-		expected = float(value)
+		expected = int(value)
 		return actual > expected
 
 	def less_than(self, value, context):
 		actual = self.to_python(context)
-		expected = float(value)
+		expected = int(value)
 		return actual < expected
 
 	def to_python(self, context):
-		return float(context['stock']['increase_rank'])
+		return int(context['stock']['increase_rank'])
 
 
 class StockDecreaseRank(Variable):
@@ -94,21 +94,21 @@ class StockDecreaseRank(Variable):
 
 	def equals(self, value, context):
 		actual = self.to_python(context)
-		expected = float(value)
+		expected = int(value)
 		return actual == expected
 
 	def greater_than(self, value, context):
 		actual = self.to_python(context)
-		expected = float(value)
+		expected = int(value)
 		return actual > expected
 
 	def less_than(self, value, context):
 		actual = self.to_python(context)
-		expected = float(value)
+		expected = int(value)
 		return actual < expected
 
 	def to_python(self, context):
-		return float(context['stock']['decrease_rank'])
+		return int(context['stock']['decrease_rank'])
 
 
 class StockPercChange(Variable):
@@ -170,8 +170,7 @@ class DateBuy(Variable):
 		return actual < expected
 
 	def __other_to_python(self, value):
-		import dateutil.parser
-		return dateutil.parser.parse(value)
+		return value
 
 	def to_python(self, context):
 		return context["date"]["buy"]
@@ -196,8 +195,7 @@ class DateToday(Variable):
 		return actual < expected
 
 	def __other_to_python(self, value):
-		import dateutil.parser
-		return dateutil.parser.parse(value)
+		return value
 
 	def to_python(self, context):
 		return context["date"]["today"]
@@ -257,3 +255,69 @@ class DateMonth(Variable):
 
 	def to_python(self, context):
 		return int(context['date']["month"])
+
+
+class DateDays(Variable):
+	operations = {"equality", "inequality"}
+
+	def equals(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual == expected
+
+	def greater_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual > expected
+
+	def less_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual < expected
+
+	def to_python(self, context):
+		return int(context["date"]["days"])
+
+
+class DateMonths(Variable):
+	operations = {"equality", "inequality"}
+
+	def equals(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual == expected
+
+	def greater_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual > expected
+
+	def less_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual < expected
+
+	def to_python(self, context):
+		return int(context["date"]["months"])
+
+
+class DateYears(Variable):
+	operations = {"equality", "inequality"}
+
+	def equals(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual == expected
+
+	def greater_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual > expected
+
+	def less_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual < expected
+
+	def to_python(self, context):
+		return int(context["date"]["years"])

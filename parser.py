@@ -34,6 +34,9 @@ if __name__ == "__main__":
 		                                     Bind("buy", stockVars.DateBuy()),
 		                                     Bind("day_of_week", stockVars.DateDayOfWeek()),
 		                                     Bind("month", stockVars.DateMonth()),
+		                                     Bind("days", stockVars.DateDays()),
+		                                     Bind("months", stockVars.DateMonths()),
+		                                     Bind("years", stockVars.DateYears()),
 	                                     ]
 	                                     )
 	                         )

@@ -3,7 +3,6 @@ import csv
 import datetime
 import pickle
 import heapq
-from dateutil.relativedelta import relativedelta
 import re
 import sys
 import argparse
@@ -11,7 +10,7 @@ import logging
 from booleano.parser import SymbolTable, Bind
 
 owned_stocks = {}
-order_history = []
+order_history = {}
 
 
 def generate_sold_stocks(data_dir, date_fmt, columns):
@@ -58,7 +57,64 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 		logger.info("Done loading pickled data")
 		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
 
-	print(owned_stocks)
+	analyze_trades()
+
+
+def analyze_trades():
+	import Statistics
+	column_names = ("Buy Date", "Symbol", "Buy Price", "Sell Date", "Sell Price", "% Change")
+	numeric_columns = ("Buy Price", "Sell Price", "% Change")
+	stock_stats = Statistics.Statistics(column_names)
+
+	trade_data = []
+	for symbol, trades in order_history.items():
+		trades = sorted(trades, key=lambda k: k['date'])
+		for trade_num, trade in enumerate(trades):
+			if trade["type"] == "sell":
+				trade_data.append({"symbol": symbol, "buy_date": trades[trade_num - 1]["date"],
+				                   "buy_price": trades[trade_num - 1]["price"],
+				                   "sell_date": trade["date"], "sell_price": trade["price"]})
+
+	# Make directories to store CSVs
+	output_dir = "output"
+	curr_date = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+	new_dir = os.path.join(output_dir, curr_date)
+	directory_num = 1
+	while os.path.isdir(new_dir):
+		new_dir = os.path.join(output_dir, curr_date + "_" + str(directory_num))
+		directory_num += 1
+	os.makedirs(new_dir)
+
+	max_rows = 1048000
+	row_count = 0
+	for sheet_num in range(0, (len(trade_data) / max_rows) + 1):
+		csv_filename = os.path.join(new_dir, "stock_sales_" + str(sheet_num) + ".csv")
+		logger.info("Writing to CSV: " + csv_filename + ". Number " + str(sheet_num + 1) + " of " +
+		            str((len(trade_data) / max_rows) + 1))
+		with open(csv_filename, "wb") as csvF:
+			writer = csv.writer(csvF)
+			writer.writerow(column_names)
+
+			count = 0
+			for stock in trade_data:
+				if count < row_count:
+					count += 1
+					continue
+				if count > 1048000 * (sheet_num + 1):
+					break
+				row_data = [stock["buy_date"], stock["symbol"], stock["buy_price"],
+				            stock["sell_date"], stock["sell_price"],
+				            percent_change(stock["buy_price"], stock["sell_price"])
+				            ]
+				writer.writerow(row_data)
+				stock_stats.add_data_multi(numeric_columns, [stock["buy_price"], stock["sell_price"],
+				                                             percent_change(stock["buy_price"], stock["sell_price"])
+				                                             ])
+				count += 1
+				row_count += 1
+
+	for name in numeric_columns:
+		print(name + " :\t%s" % stock_stats.get_stats(name))
 
 
 def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
@@ -84,7 +140,7 @@ def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
 
 			# Check if the stock is owned
 			if symbol in owned_stocks and owned_stocks[symbol] is not None:
-				test_data["date"]["buy"] = get_unix_time_date(owned_stocks[symbol]["buy_date"])
+				test_data["date"]["buy"] = get_unix_time_date(owned_stocks[symbol]["date"])
 				# Check if we should sell this stock today
 				if sell_parser(test_data):
 					sell_order(date, symbol, test_data)
@@ -129,15 +185,21 @@ def get_unix_time_(date):
 
 def purchase_order(date, symbol, extra_data):
 	if symbol not in owned_stocks or owned_stocks[symbol] is None:
-		owned_stocks[symbol] = {'buy_date': date, 'buy_price': extra_data["stock"]["price"]}
-		order_history.append({"type": "purchase", "symbol": symbol, 'buy_date': date,
-		                      'buy_price': extra_data["stock"]["price"]})
+		owned_stocks[symbol] = {'date': date, 'price': extra_data["stock"]["price"]}
+		data = {"type": "purchase", 'date': date, 'price': extra_data["stock"]["price"]}
+		if symbol not in order_history:
+			order_history[symbol] = [data]
+		else:
+			order_history[symbol].append(data)
 
 
 def sell_order(date, symbol, extra_data):
 	owned_stocks.pop(symbol)
-	order_history.append({"type": "sell", "symbol": symbol, 'sell_date': date,
-	                      'sell_price': extra_data["stock"]["price"]})
+	data = {"type": "sell", 'date': date, 'price': extra_data["stock"]["price"]}
+	if symbol not in order_history:
+		order_history[symbol] = [data]
+	else:
+		order_history[symbol].append(data)
 
 
 def percent_change(original, new_val):
@@ -220,6 +282,9 @@ if __name__ == '__main__':
 		                                     Bind("increase_rank", stockVars.StockIncreaseRank()),
 		                                     Bind("decrease_rank", stockVars.StockDecreaseRank()),
 		                                     Bind("change_percent", stockVars.StockPercChange()),
+		                                     # TODO:
+		                                     # Bind("owned", stockVars.StockPercChange()),
+		                                     # Bind("buy_price", stockVars.StockPercChange()),
 	                                     ]
 	                                     ),
 	                         SymbolTable("date",

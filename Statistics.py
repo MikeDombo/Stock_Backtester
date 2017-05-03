@@ -1,7 +1,7 @@
 class Statistics(object):
-	__stats = {}
 
 	def __init__(self, stat_list=()):
+		self.__stats = {}
 		for n in stat_list:
 			self.__stats[n] = {'min': None, 'max': None, 'count': 0, 'mean': None, 'values': [], 'sum': 0}
 
@@ -43,6 +43,9 @@ class Statistics(object):
 
 	def get_stats(self, name):
 		self.__stats[name]["stddev"] = self.__calc_stddev(name)
-		stat = self.__stats[name]
+		stat = self.__stats[name].copy()
 		stat.pop('values')
 		return stat
+
+	def get_values(self, name):
+		return self.__stats[name]["values"]

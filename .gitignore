@@ -97,6 +97,7 @@ quant_data/*
 delist.txt
 symbol_list.txt
 notes.txt
+output/*
 
 # =========================
 # Operating System Files

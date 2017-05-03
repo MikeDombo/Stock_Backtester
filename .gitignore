@@ -96,6 +96,7 @@ quant_data/*
 *.xlsx
 delist.txt
 symbol_list.txt
+notes.txt
 
 # =========================
 # Operating System Files

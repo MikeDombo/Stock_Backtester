@@ -43,6 +43,8 @@ Instead of parenthesis, use brackets ([, ]). Parenthesis only work for the boole
 - "stock:open_price" - The openning price for the stock on the current day.
 - "stock:close_price" - The closing price for the stock on the current day. This is the price that will be used as the purchase price.
 - "stock:price" - Same as close_price.
+- "stock:buy_price" - The price paid to buy the stock. Only to be used for sell conditions, not buy conditions.
+- "stock:owned" - Boolean, true when the stock is owned. To be used in future versions. Currenly it works, but is essentially pointless.
 - "stock:increase_rank" - The rank of this stock in descending order, ordered by percent change in the current day. 
 i.e. a stock with an increase_rank of 0 had the greatest increase by percent for that day.
 - "stock:decrease_rank" - The rank of this stock in ascending order, ordered by percent change in the current day. 

@@ -67,6 +67,43 @@ class StockClosePrice(Variable):
 		return float(context['stock']['close_price'])
 
 
+class StockBuyPrice(Variable):
+	operations = {"equality", "inequality"}
+
+	def equals(self, value, context):
+		actual = self.to_python(context)
+		expected = float(value)
+		return actual == expected
+
+	def greater_than(self, value, context):
+		actual = self.to_python(context)
+		expected = float(value)
+		return actual > expected
+
+	def less_than(self, value, context):
+		actual = self.to_python(context)
+		expected = float(value)
+		return actual < expected
+
+	def to_python(self, context):
+		return float(context['stock']['buy_price'])
+
+
+class StockOwned(Variable):
+	operations = {"boolean"}
+
+	def equals(self, value, context):
+		actual = self.to_python(context)
+		expected = bool(value)
+		return actual == expected
+
+	def __call__(self, context):
+		return self.to_python(context)
+
+	def to_python(self, context):
+		return bool(context['stock']['owned'])
+
+
 class StockIncreaseRank(Variable):
 	operations = {"equality", "inequality"}
 

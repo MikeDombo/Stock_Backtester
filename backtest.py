@@ -71,6 +71,10 @@ def analyze_trades():
 		directory_num += 1
 	os.makedirs(new_dir)
 
+	with open(os.path.join(new_dir, "generator_options.txt"), "w") as text_file:
+		text_file.write("Buy Conditions: %s \r\n" % buy_conditions)
+		text_file.write("Sell Conditions: %s \r\n" % sell_conditions)
+
 	column_names = ["Buy Date", "Symbol", "Buy Price", "Sell Date", "Sell Price", "% Change"]
 	numeric_columns = ["Buy Price", "Sell Price", "% Change"]
 

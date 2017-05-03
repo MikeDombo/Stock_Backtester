@@ -1,2 +1,0 @@
-http://code.gustavonarea.net/booleano/
-http://stackoverflow.com/questions/2467590/dynamically-evaluating-simple-boolean-logic-in-python

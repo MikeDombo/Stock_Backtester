@@ -93,67 +93,83 @@ def analyze_trades(order_history, owned_stocks, dates_arr, date_keyed, output_di
 
 	sold_stats = write_to_csv_split(column_data, numeric_data, column_names, numeric_columns, "sold_stocks", new_dir)
 
-	print("\r\n\r\n" + str("*"*120) + "\r\n")
-	print("Analyzing Trades For Stock Data Between %s And %s" % (dates_arr[0], dates_arr[-1]))
-	print("\r\n" + str("*" * 120))
-	print("\r\nStocks That Were Bought And Sold\n" + str("="*60))
-	for name in numeric_columns:
-		print(name + " :\t%s" % sold_stats.get_stats(name))
+	print("\r\n\r\n")
 
-	column_data = []
-	numeric_data = []
-	last_day = dates_arr[-1]
-	for symbol, trade in owned_stocks.items():
-		column_dat = [trade["date"], symbol, trade["price"]]
-		numeric_dat = [trade["price"]]
-		if symbol in date_keyed[last_day]:
-			symbol_last_day = date_keyed[last_day][symbol]
-			column_dat.extend([last_day, symbol_last_day["close"], percent_change(trade["price"], symbol_last_day["close"])])
-			numeric_dat.extend([symbol_last_day["close"], percent_change(trade["price"], symbol_last_day["close"])])
-		else:
-			column_dat.extend([last_day, 0, -1])
-			numeric_dat.extend([0, -1])
-		column_data.append(column_dat)
-		numeric_data.append(numeric_dat)
+	with open(os.path.join(new_dir, "analysis.txt"), "w") as analysis_text_file:
+		print(str("*" * 120) + "\r\n")
+		print_and_write(analysis_text_file,
+		                "Analyzing Trades For Stock Data Between %s And %s" % (dates_arr[0], dates_arr[-1]))
+		print_and_write(analysis_text_file, "\r\n" + str("*" * 120))
+		print_and_write(analysis_text_file, "\r\nStocks That Were Bought And Sold\n" + str("=" * 60))
+		for name in numeric_columns:
+			print_and_write(analysis_text_file, name + " :\t%s" % sold_stats.get_stats(name))
 
-	column_names = ["Buy Date", "Symbol", "Buy Price", "Would-be Sell Date", "Would-be Sell Price", "Would-be % Change"]
-	numeric_columns = ["Buy Price", "Would-be Sell Price", "Would-be % Change"]
+		column_data = []
+		numeric_data = []
+		last_day = dates_arr[-1]
+		for symbol, trade in owned_stocks.items():
+			column_dat = [trade["date"], symbol, trade["price"]]
+			numeric_dat = [trade["price"]]
+			if symbol in date_keyed[last_day]:
+				symbol_last_day = date_keyed[last_day][symbol]
+				column_dat.extend(
+					[last_day, symbol_last_day["close"], percent_change(trade["price"], symbol_last_day["close"])])
+				numeric_dat.extend([symbol_last_day["close"], percent_change(trade["price"], symbol_last_day["close"])])
+			else:
+				column_dat.extend([last_day, 0, -1])
+				numeric_dat.extend([0, -1])
+			column_data.append(column_dat)
+			numeric_data.append(numeric_dat)
 
-	unsold_stats = write_to_csv_split(column_data, numeric_data, column_names, numeric_columns, "unsold_stocks", new_dir)
+		column_names = ["Buy Date", "Symbol", "Buy Price", "Would-be Sell Date", "Would-be Sell Price",
+		                "Would-be % Change"]
+		numeric_columns = ["Buy Price", "Would-be Sell Price", "Would-be % Change"]
 
-	print("\r\n\r\nStocks That Were Only Bought And Never Sold. (Would-be means what would happen if the stocks were "
-	      "sold on the last day, %s)\n" % last_day + str("=" * 60))
-	for name in numeric_columns:
-		print(name + " :\t%s" % unsold_stats.get_stats(name))
+		unsold_stats = write_to_csv_split(column_data, numeric_data, column_names, numeric_columns, "unsold_stocks",
+		                                  new_dir)
 
-	print("\r\n\r\n" + str("*" * 100) + "\r\n")
-	import locale
-	locale.setlocale(locale.LC_ALL, '')
+		s = "\r\n\r\nStocks That Were Only Bought And Never Sold. (Would-be means what would happen if the stocks were " \
+		    "sold on the last day, %s)\n" % last_day + str("=" * 60)
+		print_and_write(analysis_text_file, s)
 
-	num = float(sold_stats.get_stats("% Change")["mean"]*100)
-	print("Percent gain/loss if you bought an equal dollar amount of each stock: %s%%"
-	      % locale.format('%.4f', num, grouping=True))
-	
-	amount_spent = sold_stats.get_stats("Buy Price")["sum"]
-	amount_from_sales = sold_stats.get_stats("Sell Price")["sum"]
-	num = float(percent_change(amount_spent, amount_from_sales)*100)
-	print("Percent gain/loss if you bought equal number of stocks: %s%%"
-	      % locale.format('%.4f', num, grouping=True))
+		for name in numeric_columns:
+			print_and_write(analysis_text_file, name + " :\t%s" % unsold_stats.get_stats(name))
 
-	print("\r\nPercent gain/loss including stocks that were unsold. (Assumes they are sold on the last day)")
+		print_and_write(analysis_text_file, "\r\n\r\n" + str("*" * 100) + "\r\n")
+		import locale
+		locale.setlocale(locale.LC_ALL, '')
 
-	chn = sold_stats.get_values("% Change") + unsold_stats.get_values("Would-be % Change")
-	num = float((sum(chn)/len(chn)) * 100)
-	print("Percent gain/loss if you bought an equal dollar amount of each stock: %s%%"
-	      % locale.format('%.4f', num, grouping=True))
+		num = float(sold_stats.get_stats("% Change")["mean"] * 100)
+		print_and_write(analysis_text_file, "Percent gain/loss if you bought an equal dollar amount of each stock: %s%%"
+		                % locale.format('%.4f', num, grouping=True))
 
-	amount_spent = sold_stats.get_stats("Buy Price")["sum"] + unsold_stats.get_stats("Buy Price")["sum"]
-	amount_from_sales = sold_stats.get_stats("Sell Price")["sum"] + unsold_stats.get_stats("Would-be Sell Price")["sum"]
-	num = float(percent_change(amount_spent, amount_from_sales) * 100)
-	print("Percent gain/loss if you bought equal number of stocks: %s%%"
-	      % locale.format('%.4f', num, grouping=True))
+		amount_spent = sold_stats.get_stats("Buy Price")["sum"]
+		amount_from_sales = sold_stats.get_stats("Sell Price")["sum"]
+		num = float(percent_change(amount_spent, amount_from_sales) * 100)
+		print_and_write(analysis_text_file, "Percent gain/loss if you bought equal number of stocks: %s%%"
+		                % locale.format('%.4f', num, grouping=True))
+
+		print_and_write(analysis_text_file, "\r\nPercent gain/loss including stocks that were unsold. (Assumes they "
+		                                    "are sold on the last day)")
+
+		chn = sold_stats.get_values("% Change") + unsold_stats.get_values("Would-be % Change")
+		num = float((sum(chn) / len(chn)) * 100)
+		print_and_write(analysis_text_file, "Percent gain/loss if you bought an equal dollar amount of each stock: %s%%"
+		                % locale.format('%.4f', num, grouping=True))
+
+		amount_spent = sold_stats.get_stats("Buy Price")["sum"] + unsold_stats.get_stats("Buy Price")["sum"]
+		amount_from_sales = sold_stats.get_stats("Sell Price")["sum"] + unsold_stats.get_stats("Would-be Sell Price")[
+			"sum"]
+		num = float(percent_change(amount_spent, amount_from_sales) * 100)
+		print_and_write(analysis_text_file, "Percent gain/loss if you bought equal number of stocks: %s%%"
+		                % locale.format('%.4f', num, grouping=True))
 
 	print("\r\n\r\n")
+
+
+def print_and_write(fp, s):
+	print(s)
+	fp.write(s + str("\r\n"))
 
 
 def write_to_csv_split(column_data, numeric_data, column_names, numeric_columns, filename, output_dir):
@@ -169,7 +185,7 @@ def write_to_csv_split(column_data, numeric_data, column_names, numeric_columns,
 		# Fix for Python 3.x
 		if sys.version_info >= (3, 0):
 			opener = open(csv_filename, "w", newline='')
-			
+
 		with opener as csvF:
 			writer = csv.writer(csvF)
 			writer.writerow(column_names)

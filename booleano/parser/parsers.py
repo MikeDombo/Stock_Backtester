@@ -311,8 +311,12 @@ class Parser(object):
 		"""
 		# --- Defining the individual identifiers:
 		# Getting all the Unicode numbers in a single string:
-		unicode_numbers = "".join([unichr(n) for n in xrange(0x10000)
-		                           if unichr(n).isdigit()])
+		try:
+			unicode_numbers = "".join([unichr(n) for n in xrange(0x10000)
+			                           if unichr(n).isdigit()])
+		except NameError:
+			unicode_numbers = "".join([chr(n) for n in range(0x10000)
+			                           if chr(n).isdigit()])
 		unicode_number_expr = Regex("[%s]" % unicode_numbers, re.UNICODE)
 		space_char = re.escape(self._grammar.get_token("identifier_spacing"))
 		identifier0 = Regex("[\w%s]+" % space_char, re.UNICODE)

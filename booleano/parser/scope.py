@@ -198,6 +198,9 @@ class Bind(_Identifier):
 		# table with the same names would equal this binding:
 		return same_id and isinstance(other, Bind)
 
+	def __hash__(self):
+		return id(self)
+
 	def __unicode__(self):
 		"""
         Return the Unicode representation for this binding, including its
@@ -388,6 +391,9 @@ class SymbolTable(_Identifier):
 		        hasattr(other, "objects") and
 		        other.subtables == self.subtables and
 		        self.objects == other.objects)
+
+	def __hash__(self):
+		return id(self)
 
 	def _get_contents(self, locale):
 		"""Return the namespace for this symbol table in ``locale``."""

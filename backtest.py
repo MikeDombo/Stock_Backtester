@@ -115,9 +115,15 @@ def write_to_csv_split(column_data, numeric_data, column_names, numeric_columns,
 
 	max_rows = 1048000
 	row_count = 0
-	for sheet_num in range(0, (len(column_data) / max_rows) + 1):
+	for sheet_num in range(0, int((len(column_data) / max_rows) + 1)):
 		csv_filename = os.path.join(output_dir, filename + "_" + str(sheet_num) + ".csv")
-		with open(csv_filename, "wb") as csvF:
+		opener = open(csv_filename, "wb")
+
+		# Fix for Python 3.x
+		if sys.version_info >= (3, 0):
+			opener = open(csv_filename, "w", newline='')
+			
+		with opener as csvF:
 			writer = csv.writer(csvF)
 			writer.writerow(column_names)
 
@@ -236,7 +242,10 @@ def percent_change(original, new_val):
 
 def process_csv(fn, date_fmt, columns):
 	data = []
-	with open(fn, 'rb') as csvF:
+	read_mode = 'rb'
+	if sys.version_info >= (3, 0):
+		read_mode = 'rt'
+	with open(fn, read_mode) as csvF:
 		reader = csv.reader(csvF)
 		for row in reader:
 			if row[columns[0]][0].isdigit():

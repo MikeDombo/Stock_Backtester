@@ -1,40 +1,18 @@
 class StockHist(object):
-	def __init__(self, symbol, date, symbol_data, date_keyed):
+	def __init__(self, symbol, date, date_keyed, date_keys):
 		self.symbol = symbol
 		self.date = date
-		self.open = []
-		self.close = []
-		self.price = []
-		self.change = []
-		self.incr_rank = []
-		self.decr_rank = []
+		self.date_keys = date_keys
 
-		symbol_data.sort(key=lambda x: x[0])
-		symbol_data.reverse()
 		self.date_keyed = date_keyed
-		self.symbol_data = symbol_data
 
 	def get(self, index=0):
-		for sd in self.symbol_data:
-			if sd[0] > self.date or len(self.price) > index:
-				continue
-			self.open.append(sd[1])
-			self.close.append(sd[2])
-			self.price.append(sd[2])
-			self.change.append(self.date_keyed[sd[0]][self.symbol]["change"])
-			self.incr_rank.append(self.date_keyed[sd[0]][self.symbol]["increase_rank"])
-			self.decr_rank.append(self.date_keyed[sd[0]][self.symbol]["decrease_rank"])
+		start = self.date_keys.index(self.date)
 
-		returner = {"open_price": self.open[index], "close_price": self.close[index], "price": self.price[index],
-		            "increase_rank": self.incr_rank[index], "decrease_rank": self.decr_rank[index],
-		            "change_percent": self.change[index]
-		            }
+		date = self.date_keys[start + index]
+		data = self.date_keyed[date][self.symbol]
 
-		self.open = []
-		self.close = []
-		self.price = []
-		self.change = []
-		self.incr_rank = []
-		self.decr_rank = []
-
-		return returner
+		return {"open_price": data["open"], "close_price": data["close"], "price": data["close"],
+		        "increase_rank": data["increase_rank"], "decrease_rank": data["decrease_rank"],
+		        "change_percent": data["change"]
+		        }

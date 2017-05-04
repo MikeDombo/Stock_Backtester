@@ -38,7 +38,6 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 
 		logger.info("Done pivoting data")
 		logger.info("Dumping pivoted data to pickle")
-		pickle.dump(symbol_keyed, open("symbol_keyed.pkl", "wb"))
 		pickle.dump(date_keyed, open("date_keyed.pkl", "wb"))
 		logger.info("Done pickling")
 
@@ -48,14 +47,13 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 		dates_arr.sort()
 		pickle.dump(dates_arr, open("dates_arr.pkl", "wb"))
 
-		buy_stocks(date_keyed, dates_arr, symbol_keyed, buy_parser, sell_parser)
+		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
 	else:
 		logger.info("Loading pickled data")
 		date_keyed = pickle.load(open("date_keyed.pkl", "rb"))
 		dates_arr = pickle.load(open("dates_arr.pkl", "rb"))
-		symbol_keyed = pickle.load(open("symbol_keyed.pkl", "rb"))
 		logger.info("Done loading pickled data")
-		buy_stocks(date_keyed, dates_arr, symbol_keyed, buy_parser, sell_parser)
+		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
 
 	output_dir = "output"
 	analyze_trades(order_history, owned_stocks, dates_arr, date_keyed, output_dir)
@@ -207,9 +205,27 @@ def write_to_csv_split(column_data, numeric_data, column_names, numeric_columns,
 	return stock_stats
 
 
-def buy_stocks(date_keyed, date_keys, symbol_keyed, buy_parser, sell_parser):
+def get_days_of_history(symbol, date, date_keys, date_keyed):
+	end = date_keys.index(date)
+	start = end
+	has_set = False
+	for d in range(0, end):
+		if symbol not in date_keyed[date_keys[end-d]]:
+			start = (end - d) + 1
+			has_set = True
+			break
+
+	if start == end and not has_set:
+		start = 0
+
+	return int(end - start)
+
+
+def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
 	from StockHist import StockHist
 	logger.info("Finding stocks to buy and sell day-by-day")
+	date_key_reverse = date_keys.copy()
+	date_key_reverse.reverse()
 	for date in date_keys:
 		symbol_data = date_keyed[date]
 		losers = find_biggest_losers(symbol_data)
@@ -219,9 +235,13 @@ def buy_stocks(date_keyed, date_keys, symbol_keyed, buy_parser, sell_parser):
 			date_keyed[date][symbol]["increase_rank"] = winners[symbol]
 			date_keyed[date][symbol]["decrease_rank"] = losers[symbol]
 
-			sh = StockHist(symbol, date, symbol_keyed[symbol], date_keyed)
-			test_data = {"stock": {"symbol": symbol, "data": sh},
-			             "date": {"today": get_unix_time_date(date),
+			days_of_hist = get_days_of_history(symbol, date, date_keys, date_keyed)
+			sh = StockHist(symbol, date, date_keyed, date_key_reverse)
+			test_data = {"stock": {"symbol": symbol, "data": sh, "open_price": s_data["open"],
+			                       "close_price": s_data["close"], "price": s_data["close"],
+			                       "increase_rank": winners[symbol], "decrease_rank": losers[symbol],
+			                       "change_percent": s_data["change"]},
+			             "date": {"today": get_unix_time_date(date), "days_of_history": days_of_hist,
 			                      "buy": 0, "day_of_week": date.isoweekday(),
 			                      "month": date.month, "days": 86400, "months": 2592000, "years": 31536000}
 			             }

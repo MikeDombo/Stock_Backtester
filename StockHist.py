@@ -1,16 +1,18 @@
 class StockHist(object):
-	def __init__(self, symbol, date, date_keyed, date_keys):
+	date_keyed = {}
+
+	def __init__(self, symbol, date, date_keyed, symbol_keyed):
 		self.symbol = symbol
 		self.date = date
-		self.date_keys = date_keys
-
 		self.date_keyed = date_keyed
+		self.symbol_keyed = symbol_keyed
 
 	def get(self, index=0):
-		start = self.date_keys.index(self.date)
-
-		date = self.date_keys[start + index]
-		data = self.date_keyed[date][self.symbol]
+		for i, d in enumerate(self.symbol_keyed):
+			if d[0] == self.date:
+				break
+		sd = self.symbol_keyed[i - index]
+		data = self.date_keyed[sd[0]][self.symbol]
 
 		return {"open_price": data["open"], "close_price": data["close"], "price": data["close"],
 		        "increase_rank": data["increase_rank"], "decrease_rank": data["decrease_rank"],

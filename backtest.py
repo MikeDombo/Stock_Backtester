@@ -31,14 +31,16 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 		logger.info("Beginning to pivot data")
 		for symbol, d in symbol_keyed.items():
 			for data in d:
-				insert = {'open': data[1], 'close': data[2], 'change': percent_change(data[1], data[2])}
+				insert = {'open': data[1], 'close': data[2], 'change': percent_change(data[1], data[2]), "doh": data[3]}
 				if data[0] not in date_keyed:
 					date_keyed[data[0]] = {}
 				date_keyed[data[0]][symbol] = insert
 
+		#del symbol_keyed
 		logger.info("Done pivoting data")
 		logger.info("Dumping pivoted data to pickle")
 		pickle.dump(date_keyed, open("date_keyed.pkl", "wb"))
+		pickle.dump(symbol_keyed, open("symbol_keyed.pkl", "wb"))
 		logger.info("Done pickling")
 
 		dates_arr = []
@@ -47,13 +49,14 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 		dates_arr.sort()
 		pickle.dump(dates_arr, open("dates_arr.pkl", "wb"))
 
-		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
+		buy_stocks(date_keyed, dates_arr, symbol_keyed, buy_parser, sell_parser)
 	else:
 		logger.info("Loading pickled data")
 		date_keyed = pickle.load(open("date_keyed.pkl", "rb"))
 		dates_arr = pickle.load(open("dates_arr.pkl", "rb"))
+		symbol_keyed = pickle.load(open("symbol_keyed.pkl", "rb"))
 		logger.info("Done loading pickled data")
-		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
+		buy_stocks(date_keyed, dates_arr, symbol_keyed, buy_parser, sell_parser)
 
 	output_dir = "output"
 	analyze_trades(order_history, owned_stocks, dates_arr, date_keyed, output_dir)
@@ -205,38 +208,19 @@ def write_to_csv_split(column_data, numeric_data, column_names, numeric_columns,
 	return stock_stats
 
 
-def get_days_of_history(symbol, date, date_keys, date_keyed):
-	end = date_keys.index(date)
-	start = end
-	has_set = False
-	for d in range(0, end):
-		if symbol not in date_keyed[date_keys[end-d]]:
-			start = (end - d) + 1
-			has_set = True
-			break
-
-	if start == end and not has_set:
-		start = 0
-
-	return int(end - start)
-
-
-def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
+def buy_stocks(date_keyed, date_keys, symbol_keyed, buy_parser, sell_parser):
 	from StockHist import StockHist
 	logger.info("Finding stocks to buy and sell day-by-day")
-	date_key_reverse = date_keys.copy()
-	date_key_reverse.reverse()
 	for date in date_keys:
 		symbol_data = date_keyed[date]
 		losers = find_biggest_losers(symbol_data)
 		winners = find_biggest_winners(symbol_data)
-		# Consider putting winners and losers back into date_keyed to be used by the sell method
 		for symbol, s_data in symbol_data.items():
 			date_keyed[date][symbol]["increase_rank"] = winners[symbol]
 			date_keyed[date][symbol]["decrease_rank"] = losers[symbol]
 
-			days_of_hist = get_days_of_history(symbol, date, date_keys, date_keyed)
-			sh = StockHist(symbol, date, date_keyed, date_key_reverse)
+			days_of_hist = s_data["doh"]
+			sh = StockHist(symbol, date, date_keyed, symbol_keyed[symbol])
 			test_data = {"stock": {"symbol": symbol, "data": sh, "open_price": s_data["open"],
 			                       "close_price": s_data["close"], "price": s_data["close"],
 			                       "increase_rank": winners[symbol], "decrease_rank": losers[symbol],
@@ -259,7 +243,7 @@ def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
 				if sell_parser(test_data):
 					sell_order(date, symbol, test_data)
 
-	logger.info("DONE Finding stocks to buy and sell day-by-day")
+	logger.info("Done finding stocks to buy and sell")
 
 
 def find_biggest_losers(d):
@@ -295,7 +279,7 @@ def get_unix_time_date(date):
 	return (date - datetime.datetime(1970, 1, 1).date()).total_seconds()
 
 
-def get_unix_time_(date):
+def get_unix_time(date):
 	return (date - datetime.datetime(1970, 1, 1)).total_seconds()
 
 
@@ -338,6 +322,12 @@ def process_csv(fn, date_fmt, columns):
 			if row[columns[0]][0].isdigit():
 				date = datetime.datetime.strptime(row[columns[0]], date_fmt).date()
 				data += [[date, float(row[columns[1]]), float(row[columns[2]])]]
+		data.sort(key=lambda x: x[0])
+		doh = 0
+		for dr in data:
+			dr.append(doh)
+			doh += 1
+
 	return data
 
 
@@ -446,3 +436,8 @@ if __name__ == '__main__':
 	print(sell_parser)
 
 	generate_sold_stocks(data_dir, date_fmt, (date_column, open_column, close_column))
+
+	import os
+	import psutil
+	p = psutil.Process(os.getpid())
+	print("Execution took %s seconds" % p.cpu_times().user)

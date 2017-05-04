@@ -77,4 +77,12 @@ i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for 
 `stock:increase_rank < 5`
 #### Buy Stocks That Have Lost Value For 2 Days
 `date:date_of_history >= 1 && stock:change_percent:1 < 0 && stock:change_percent < 0`
+#### Buy Specific Stocks
+`stock in {'AAPL', 'GOOG', 'SPX', 'CSX'}`
+
+`stock in {'AAPL', 'GOOG', 'SPX', 'CSX'} && (stock:change_percent > 0.05 || stock:change_percent < 0)`
 ## Example Sell Conditions
+#### Sell After 3 Months
+`date >= date:buy+[3*date:months]`
+#### Sell If Stock Price Increase Is Slowing
+`(stock:price > stock:buy_price) && (stock:increase_rank < stock:increase_rank:1)`

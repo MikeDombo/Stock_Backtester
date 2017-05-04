@@ -519,12 +519,16 @@ class Namespace(object):
             exist.
         
         """
+		object_name = object_name.lower()
 		ns = self._get_subnamespace(namespace_parts)
-		if ns is None or object_name not in ns.objects:
+		if ns is None or object_name not in ns.objects or namespace_parts[-1].lower() not in ns.objects:
 			msg = u'No such object "%s"' % object_name
 			if namespace_parts:
 				msg = u'%s in %s' % (msg, u":".join(namespace_parts))
 			raise ScopeError(msg)
+		elif object_name not in ns.objects and namespace_parts[-1].lower() in ns.objects:
+			var = ns.objects[namespace_parts[-1].lower()].set_index(object_name)
+			return var
 		return ns.objects[object_name]
 
 	def _get_subnamespace(self, namespace_parts):

@@ -317,6 +317,7 @@ class Parser(object):
 		except NameError:
 			unicode_numbers = "".join([chr(n) for n in range(0x10000)
 			                           if chr(n).isdigit()])
+
 		unicode_number_expr = Regex("[%s]" % unicode_numbers, re.UNICODE)
 		space_char = re.escape(self._grammar.get_token("identifier_spacing"))
 		identifier0 = Regex("[\w%s]+" % space_char, re.UNICODE)
@@ -463,6 +464,7 @@ class EvaluableParser(Parser):
 			a function, not a variable.
 
 		"""
+		print("Make var %s %s" % (tokens.identifier, tokens.namespace_parts))
 		var = self._namespace.get_object(tokens.identifier, tokens.namespace_parts)
 		if isinstance(var, type) and issubclass(var, Function):
 			orig_id = self.__get_original_identifier__(tokens)

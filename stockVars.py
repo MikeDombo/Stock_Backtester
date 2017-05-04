@@ -129,6 +129,13 @@ class StockIncreaseRank(Variable):
 class StockDecreaseRank(Variable):
 	operations = {"equality", "inequality"}
 
+	def __init__(self):
+		self.index = 0
+
+	def set_index(self, index=0):
+		self.index = index
+		print("INDEX: " +str(index))
+
 	def equals(self, value, context):
 		actual = self.to_python(context)
 		expected = int(value)

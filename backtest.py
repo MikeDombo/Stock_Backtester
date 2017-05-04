@@ -380,7 +380,12 @@ if __name__ == '__main__':
 		                                     Bind("change_percent", stockVars.StockPercChange()),
 		                                     Bind("owned", stockVars.StockOwned()),
 		                                     Bind("buy_price", stockVars.StockBuyPrice()),
-	                                     ]
+	                                     ],
+	                                     SymbolTable("decrease_rank",
+	                                                 [
+		                                                 Bind("nds", stockVars.StockDecreaseRank()),
+	                                                 ]
+	                                                 )
 	                                     ),
 	                         SymbolTable("date",
 	                                     [

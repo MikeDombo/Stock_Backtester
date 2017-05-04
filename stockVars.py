@@ -20,7 +20,10 @@ class StockPrice(ArrayVariable):
 		return actual < expected
 
 	def to_python(self, context):
-		return float(context['stock']['price'])
+		if self.index == 0:
+			return float(context['stock']['price'])
+		else:
+			return float(context['stock']["data"].get(self.index)['price'])
 
 
 class StockOpenPrice(ArrayVariable):
@@ -42,7 +45,10 @@ class StockOpenPrice(ArrayVariable):
 		return actual < expected
 
 	def to_python(self, context):
-		return float(context['stock']['open_price'])
+		if self.index == 0:
+			return float(context['stock']['open_price'])
+		else:
+			return float(context['stock']["data"].get(self.index)['open_price'])
 
 
 class StockClosePrice(ArrayVariable):
@@ -64,7 +70,10 @@ class StockClosePrice(ArrayVariable):
 		return actual < expected
 
 	def to_python(self, context):
-		return float(context['stock']['close_price'])
+		if self.index == 0:
+			return float(context['stock']['close_price'])
+		else:
+			return float(context['stock']["data"].get(self.index)['close_price'])
 
 
 class StockBuyPrice(Variable):
@@ -123,7 +132,10 @@ class StockIncreaseRank(ArrayVariable):
 		return actual < expected
 
 	def to_python(self, context):
-		return int(context['stock']['increase_rank'])
+		if self.index == 0:
+			return int(context['stock']['increase_rank'])
+		else:
+			return int(context['stock']["data"].get(self.index)['increase_rank'])
 
 
 class StockDecreaseRank(ArrayVariable):
@@ -145,7 +157,10 @@ class StockDecreaseRank(ArrayVariable):
 		return actual < expected
 
 	def to_python(self, context):
-		return int(context['stock']['decrease_rank'])
+		if self.index == 0:
+			return int(context['stock']['decrease_rank'])
+		else:
+			return int(context['stock']["data"].get(self.index)['decrease_rank'])
 
 
 class StockPercChange(ArrayVariable):
@@ -167,7 +182,10 @@ class StockPercChange(ArrayVariable):
 		return actual < expected
 
 	def to_python(self, context):
-		return float(context['stock']['change_percent'])
+		if self.index == 0:
+			return float(context['stock']['change_percent'])
+		else:
+			return float(context['stock']["data"].get(self.index)['change_percent'])
 
 
 class StockSymbol(Variable):
@@ -358,3 +376,25 @@ class DateYears(Variable):
 
 	def to_python(self, context):
 		return int(context["date"]["years"])
+
+
+class DateDaysOfHistory(Variable):
+	operations = {"equality", "inequality"}
+
+	def equals(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual == expected
+
+	def greater_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual > expected
+
+	def less_than(self, value, context):
+		actual = self.to_python(context)
+		expected = int(value)
+		return actual < expected
+
+	def to_python(self, context):
+		return int(context['date']['days_of_history'])

@@ -37,22 +37,30 @@ Arithmetic can also be used for dates. For example, if you want to sell after 3 
 
 Instead of parenthesis, use brackets ([, ]). Parenthesis only work for the boolean, not for math.
 
+### Array Variables
+Some variables support array-type indexing for history. That means you can check the variable values for previous days. A query like 
+`date:days_of_history >= 5 && stock:price:5 < 30` will select stocks whose price was less than 30 5 days ago. An index of 0 is today. Indexes greater than 0 go back in history. Indexes less than 0 are not supported because you cannot trade based on future information.
+
+All array variable conditions must be combined with `date:days_of_history` by '&&' like the example above because there is a time when 
+no history is available. The days_of_history condition must come first so that the array variable is not evaluated. If you neglect to include this, the program will crash.
+
 ### Supported Variables
 #### Stock Variables
 - "stock" or "stock:symbol" - Is the stock symbol. Can be checked for equality or membership, not inequality or arithmetic.
-- "stock:open_price" - The openning price for the stock on the current day.
-- "stock:close_price" - The closing price for the stock on the current day. This is the price that will be used as the purchase price.
-- "stock:price" - Same as close_price.
+- "stock:open_price" - The openning price for the stock on the current day. Supports array indexing.
+- "stock:close_price" - The closing price for the stock on the current day. This is the price that will be used as the purchase price. Supports array indexing.
+- "stock:price" - Same as close_price. Supports array indexing.
 - "stock:buy_price" - The price paid to buy the stock. Only to be used for sell conditions, not buy conditions.
 - "stock:owned" - Boolean, true when the stock is owned. To be used in future versions. Currenly it works, but is essentially pointless.
 - "stock:increase_rank" - The rank of this stock in descending order, ordered by percent change in the current day. 
-i.e. a stock with an increase_rank of 0 had the greatest increase by percent for that day.
+i.e. a stock with an increase_rank of 0 had the greatest increase by percent for that day. Supports array indexing.
 - "stock:decrease_rank" - The rank of this stock in ascending order, ordered by percent change in the current day. 
-i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for that day.
-- "stock:change_percent" - The decimal percentage change for thist stock for today. Decimal percent means that 10% will be 0.1.
+i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for that day. Supports array indexing.
+- "stock:change_percent" - The decimal percentage change for thist stock for today. Decimal percent means that 10% will be 0.1. Supports array indexing.
 
 #### Date Variables
 - "date" or "date:today" - Today's date in Unix epoch time.
+- "date:days_of_history" - Number of days of previous data available for the stock, (i.e. days since the stock was listed). To be used with array variables.
 - "date:buy" - The Unix epoch time that the stock was purchased (if it was). Only to be used for sell conditions, not buy conditions.
 - "date:day_of_week" - Today's day of the week as an integer from 1 to 7, where 1 is Monday.
 - "date:month" - The month that today is in. 1 is January.
@@ -60,3 +68,13 @@ i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for 
 `date >= date:buy+[10*date:days]`.
 - "date:months" - Constant value to be used in arithmetic. Similar to "date:days".
 - "date:years" - Constant value to be used in arithmetic. Similar to "date:months" and "date:days".
+
+# Examples
+## Example Buy Conditions
+#### Buy 5 Worst Performing Stocks For Today
+`stock:decrease_rank < 5`
+#### Buy 5 Best Performing Stocks For Today
+`stock:increase_rank < 5`
+#### Buy Stocks That Have Lost Value For 2 Days
+`date:date_of_history >= 1 && stock:change_percent:1 < 0 && stock:change_percent < 0`
+## Example Sell Conditions

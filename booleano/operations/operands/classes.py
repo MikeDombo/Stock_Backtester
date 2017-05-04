@@ -38,7 +38,7 @@ There are two types of Booleano classes:
 from booleano.operations.operands import Operand, _OperandMeta
 from booleano.exc import BadOperandError, BadCallError, BadFunctionError
 
-__all__ = ["Variable", "Function"]
+__all__ = ["Variable", "Function", "ArrayVariable"]
 
 
 class Class(Operand):
@@ -75,6 +75,32 @@ class Variable(Class):
 	def __repr__(self):
 		"""Represent this variable."""
 		return "<Anonymous variable [%s]>" % self.__class__.__name__
+
+
+class ArrayVariable(Class):
+	"""
+    Developer-defined variable.
+
+    """
+
+	# Only actual variables should be checked.
+	bypass_operation_check = True
+
+	def __init__(self):
+		self.index = 0
+
+	def set_index(self, index):
+		if index.isdigit():
+			index = int(index)
+		self.index = index
+
+	def __unicode__(self):
+		"""Return the Unicode representation of this variable."""
+		return 'ArrayVariable [%s[%s]]' % (self.__class__.__name__, self.index)
+
+	def __repr__(self):
+		"""Represent this variable."""
+		return "<ArrayVariable [%s[%s]]>" % (self.__class__.__name__, self.index)
 
 
 class _FunctionMeta(_OperandMeta):

@@ -1,7 +1,7 @@
-from booleano.operations import Variable
+from booleano.operations import Variable, ArrayVariable
 
 
-class StockPrice(Variable):
+class StockPrice(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -23,7 +23,7 @@ class StockPrice(Variable):
 		return float(context['stock']['price'])
 
 
-class StockOpenPrice(Variable):
+class StockOpenPrice(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -45,7 +45,7 @@ class StockOpenPrice(Variable):
 		return float(context['stock']['open_price'])
 
 
-class StockClosePrice(Variable):
+class StockClosePrice(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -104,7 +104,7 @@ class StockOwned(Variable):
 		return bool(context['stock']['owned'])
 
 
-class StockIncreaseRank(Variable):
+class StockIncreaseRank(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -126,7 +126,7 @@ class StockIncreaseRank(Variable):
 		return int(context['stock']['increase_rank'])
 
 
-class StockDecreaseRank(Variable):
+class StockDecreaseRank(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -148,7 +148,7 @@ class StockDecreaseRank(Variable):
 		return int(context['stock']['decrease_rank'])
 
 
-class StockPercChange(Variable):
+class StockPercChange(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):

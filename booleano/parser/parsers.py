@@ -317,11 +317,12 @@ class Parser(object):
 		except NameError:
 			unicode_numbers = "".join([chr(n) for n in range(0x10000)
 			                           if chr(n).isdigit()])
+
 		unicode_number_expr = Regex("[%s]" % unicode_numbers, re.UNICODE)
 		space_char = re.escape(self._grammar.get_token("identifier_spacing"))
 		identifier0 = Regex("[\w%s]+" % space_char, re.UNICODE)
 		# Identifiers cannot start with a number:
-		identifier0 = Combine(~unicode_number_expr + identifier0)
+		identifier0 = Combine(identifier0)
 		identifier0.setName("individual_identifier")
 
 		# --- Defining the namespaces:
@@ -330,17 +331,15 @@ class Parser(object):
 		namespace.setName("namespace")
 
 		# --- The full identifier, which could have a namespace:
-		identifier = Combine(namespace.setResultsName("namespace_parts") +
-		                     identifier0.setResultsName("identifier"))
+		identifier = Combine(namespace.setResultsName("namespace_parts") + identifier0.setResultsName("identifier"))
 		identifier.setName("full_identifier")
 
 		expop = Literal('^')
-		signop = oneOf('+ -')
 		multop = oneOf('* /')
-		plusop = oneOf('+ -')
 		factop = Literal('!')
 		modop = Literal('%')
-		opers = expop | signop | multop | plusop | factop | modop
+		signop = oneOf('+ -')
+		opers = expop | signop | multop | factop | modop
 
 		identifier = identifier + NotAny(opers)
 
@@ -466,8 +465,7 @@ class EvaluableParser(Parser):
 		var = self._namespace.get_object(tokens.identifier, tokens.namespace_parts)
 		if isinstance(var, type) and issubclass(var, Function):
 			orig_id = self.__get_original_identifier__(tokens)
-			raise BadExpressionError(u'"%s" represents a function, not a '
-			                         'variable' % orig_id)
+			raise BadExpressionError(u'"%s" represents a function, not a variable' % orig_id)
 		return var
 
 	def make_function(self, tokens):

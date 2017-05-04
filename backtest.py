@@ -36,10 +36,9 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 					date_keyed[data[0]] = {}
 				date_keyed[data[0]][symbol] = insert
 
-		del symbol_keyed
 		logger.info("Done pivoting data")
 		logger.info("Dumping pivoted data to pickle")
-
+		pickle.dump(symbol_keyed, open("symbol_keyed.pkl", "wb"))
 		pickle.dump(date_keyed, open("date_keyed.pkl", "wb"))
 		logger.info("Done pickling")
 
@@ -49,13 +48,14 @@ def generate_sold_stocks(data_dir, date_fmt, columns):
 		dates_arr.sort()
 		pickle.dump(dates_arr, open("dates_arr.pkl", "wb"))
 
-		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
+		buy_stocks(date_keyed, dates_arr, symbol_keyed, buy_parser, sell_parser)
 	else:
 		logger.info("Loading pickled data")
 		date_keyed = pickle.load(open("date_keyed.pkl", "rb"))
 		dates_arr = pickle.load(open("dates_arr.pkl", "rb"))
+		symbol_keyed = pickle.load(open("symbol_keyed.pkl", "rb"))
 		logger.info("Done loading pickled data")
-		buy_stocks(date_keyed, dates_arr, buy_parser, sell_parser)
+		buy_stocks(date_keyed, dates_arr, symbol_keyed, buy_parser, sell_parser)
 
 	output_dir = "output"
 	analyze_trades(order_history, owned_stocks, dates_arr, date_keyed, output_dir)
@@ -207,7 +207,8 @@ def write_to_csv_split(column_data, numeric_data, column_names, numeric_columns,
 	return stock_stats
 
 
-def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
+def buy_stocks(date_keyed, date_keys, symbol_keyed, buy_parser, sell_parser):
+	from StockHist import StockHist
 	logger.info("Finding stocks to buy and sell day-by-day")
 	for date in date_keys:
 		symbol_data = date_keyed[date]
@@ -215,10 +216,11 @@ def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
 		winners = find_biggest_winners(symbol_data)
 		# Consider putting winners and losers back into date_keyed to be used by the sell method
 		for symbol, s_data in symbol_data.items():
-			test_data = {"stock": {"symbol": symbol, "open_price": s_data["open"],
-			                       "close_price": s_data["close"], "price": s_data["close"],
-			                       "increase_rank": winners[symbol], "decrease_rank": losers[symbol],
-			                       "change_percent": s_data["change"]},
+			date_keyed[date][symbol]["increase_rank"] = winners[symbol]
+			date_keyed[date][symbol]["decrease_rank"] = losers[symbol]
+
+			sh = StockHist(symbol, date, symbol_keyed[symbol], date_keyed)
+			test_data = {"stock": {"symbol": symbol, "data": sh},
 			             "date": {"today": get_unix_time_date(date),
 			                      "buy": 0, "day_of_week": date.isoweekday(),
 			                      "month": date.month, "days": 86400, "months": 2592000, "years": 31536000}
@@ -236,6 +238,8 @@ def buy_stocks(date_keyed, date_keys, buy_parser, sell_parser):
 				# Check if we should sell this stock today
 				if sell_parser(test_data):
 					sell_order(date, symbol, test_data)
+
+	logger.info("DONE Finding stocks to buy and sell day-by-day")
 
 
 def find_biggest_losers(d):
@@ -277,9 +281,9 @@ def get_unix_time_(date):
 
 def purchase_order(date, symbol, extra_data):
 	if symbol not in owned_stocks or owned_stocks[symbol] is None:
-		owned_stocks[symbol] = {'date': date, 'price': extra_data["stock"]["price"]}
+		owned_stocks[symbol] = {'date': date, 'price': extra_data["stock"]["data"].get(0)["price"]}
 
-		data = {"type": "purchase", 'date': date, 'price': extra_data["stock"]["price"]}
+		data = {"type": "purchase", 'date': date, 'price': extra_data["stock"]["data"].get(0)["price"]}
 		if symbol not in order_history:
 			order_history[symbol] = [data]
 		else:
@@ -288,7 +292,7 @@ def purchase_order(date, symbol, extra_data):
 
 def sell_order(date, symbol, extra_data):
 	owned_stocks.pop(symbol)
-	data = {"type": "sell", 'date': date, 'price': extra_data["stock"]["price"]}
+	data = {"type": "sell", 'date': date, 'price': extra_data["stock"]["data"].get(0)["price"]}
 	if symbol not in order_history:
 		order_history[symbol] = [data]
 	else:
@@ -392,6 +396,7 @@ if __name__ == '__main__':
 	                                     [
 		                                     Bind("today", today_var),
 		                                     Bind("buy", stockVars.DateBuy()),
+		                                     Bind("days_of_history", stockVars.DateDaysOfHistory()),
 		                                     Bind("day_of_week", stockVars.DateDayOfWeek()),
 		                                     Bind("month", stockVars.DateMonth()),
 		                                     Bind("days", stockVars.DateDays()),

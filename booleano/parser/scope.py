@@ -553,7 +553,11 @@ class Namespace(object):
         :rtype: Namespace
         
         """
-		namespace_parts = namespace_parts.copy()
+		import sys
+		if sys.version_info >= (3, 0):
+			namespace_parts = namespace_parts.copy()
+		else:
+			namespace_parts = namespace_parts[:]
 		if not namespace_parts:
 			return self
 		current_part = namespace_parts.pop(0)

@@ -344,6 +344,8 @@ if __name__ == '__main__':
 	                    help='Conditions under which a stock should be purchased')
 	parser.add_argument('-s', '--sell_conditions', type=str, nargs='+',
 	                    help='Conditions under which an owned stock should be sold')
+	parser.add_argument('-cf', '--condition_file', type=str, nargs=1,
+	                    help='File containing buy and sell conditions')
 	parser.add_argument('-df', '--csv_date_format', type=str, nargs='+', help='Python string format for date')
 	parser.add_argument('-oc', '--open_column', type=int, nargs=1, help='Zero-indexed CSV column for the open price')
 	parser.add_argument('-cc', '--close_column', type=int, nargs=1, help='Zero-indexed CSV column for the close price')
@@ -366,12 +368,28 @@ if __name__ == '__main__':
 		close_column = args.close_column[0]
 	if args.date_column:
 		date_column = args.date_column[0]
-	if not args.buy_conditions or not args.sell_conditions:
+	if (not args.buy_conditions or not args.sell_conditions) and not args.condition_file:
 		print("Buy or sell conditions missing")
 		sys.exit(2)
 
-	buy_conditions = args.buy_conditions[0]
-	sell_conditions = args.sell_conditions[0]
+	if args.condition_file:
+		read_mode = 'rb'
+		if sys.version_info >= (3, 0):
+			read_mode = 'rt'
+		with open(args.condition_file[0], read_mode) as cond_file:
+			data = cond_file.read()
+
+		import re
+		regex = r"Buy Conditions:\s+(?P<buy_cond>.*)\s*Sell Conditions:\s+(?P<sell_cond>.*)"
+		reg = re.compile(regex, re.MULTILINE)
+		m = reg.match(data)
+
+		buy_conditions = m.group(reg.groupindex["buy_cond"])
+		sell_conditions = m.group(reg.groupindex["sell_cond"])
+
+	else:
+		buy_conditions = args.buy_conditions[0]
+		sell_conditions = args.sell_conditions[0]
 
 	import stockVars
 

@@ -86,3 +86,7 @@ i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for 
 `date >= date:buy+[3*date:months]`
 #### Sell If Stock Price Increase Is Slowing
 `(stock:price > stock:buy_price) && (stock:increase_rank < stock:increase_rank:1)`
+
+## Limitations
+- This backtester does not currently support intraday data. This means that it only makes a trade (buy or sell) at the end of the day.
+- No support for splits. All data provided to the backtester should be relative to the first day or last day. Yahoo Finance data does do this automatically. 

@@ -15,6 +15,7 @@ historical stock data to test your buying and selling techniques to optimize you
 - -d DIRECTORY, --directory DIRECTORY. Directory containing csv files of stock data.
 -  -b BUY_CONDITIONS, --buy_conditions BUY_CONDITIONS. Conditions under which a stock should be purchased (already owned stocks will not be purchased again.
 -  -s SELL_CONDITIONS, --sell_conditions SELL_CONDITIONS. Conditions under which an owned stock should be sold.
+- -cf CONDITION_FILE, --condition_file CONDITION_FILE. File containing buy and sell conditions.
 -  -df CSV_DATE_FORMAT, --csv_date_format CSV_DATE_FORMAT. Python string format for date. Ex. "%Y%m%d" for dates like 19900223.
 -  -oc OPEN_COLUMN, --open_column OPEN_COLUMN. Zero-indexed CSV column for the open price.
 -  -cc CLOSE_COLUMN, --close_column CLOSE_COLUMN. Zero-indexed CSV column for the close price.

@@ -1,5 +1,5 @@
 # Python Customizable Stock Backtester
-Python project for backtesting stock trading techniques.
+Download historical stock data and test your trading techniques to maximize profits.
 
 # What it is Used For
 This repository hosts code to download historical financial data from Yahoo Finance. You can then utilize that data, or any other source of 

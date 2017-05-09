@@ -526,14 +526,15 @@ class Namespace(object):
 			if namespace_parts:
 				msg = u'%s in %s' % (msg, u":".join(namespace_parts))
 			raise ScopeError(msg)
-		ns2 = self._get_subnamespace(namespace_parts[0:-1])
-		from booleano.operations import ArrayVariable
-		if (object_name not in ns.objects and namespace_parts is not None and namespace_parts[-1].lower() in ns2.objects
-				    and isinstance(ns2.objects[namespace_parts[-1].lower()], ArrayVariable)):
-			var = ns2.objects[namespace_parts[-1].lower()]
-			var.set_index(object_name)
-			return var
-		elif object_name not in ns.objects:
+		if namespace_parts is not None:
+			ns2 = self._get_subnamespace(namespace_parts[0:-1])
+			from booleano.operations import ArrayVariable
+			if (object_name not in ns.objects and namespace_parts is not None and namespace_parts[-1].lower() in ns2.objects
+					    and isinstance(ns2.objects[namespace_parts[-1].lower()], ArrayVariable)):
+				var = ns2.objects[namespace_parts[-1].lower()]
+				var.set_index(object_name)
+				return var
+		if ns is None or object_name not in ns.objects:
 			msg = u'No such object "%s"' % object_name
 			if namespace_parts:
 				msg = u'%s in %s' % (msg, u":".join(namespace_parts))
@@ -553,13 +554,13 @@ class Namespace(object):
         :rtype: Namespace
         
         """
+		if not namespace_parts:
+			return self
 		import sys
 		if sys.version_info >= (3, 0):
 			namespace_parts = namespace_parts.copy()
 		else:
 			namespace_parts = namespace_parts[:]
-		if not namespace_parts:
-			return self
 		current_part = namespace_parts.pop(0)
 		if current_part not in self.subnamespaces:
 			return None

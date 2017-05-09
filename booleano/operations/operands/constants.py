@@ -141,7 +141,11 @@ class String(Constant):
 		have to be a :class:`basestring` initially.
 
 		"""
-		string = str(string)
+		import sys
+		if sys.version_info >= (3, 0):
+			string = str(string)
+		else:
+			string = unicode(string)
 		super(String, self).__init__(string)
 
 	def equals(self, value, context):
@@ -152,6 +156,9 @@ class String(Constant):
 	def __unicode__(self):
 		"""Return the Unicode representation of this constant string."""
 		return u'"%s"' % self.constant_value
+
+	def __hash__(self):
+		return id(self)
 
 	def __repr__(self):
 		"""Return the representation for this constant string."""

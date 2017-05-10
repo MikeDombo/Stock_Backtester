@@ -91,3 +91,9 @@ i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for 
 ## Limitations
 - This backtester does not currently support intraday data. This means that it only makes a trade (buy or sell) at the end of the day.
 - No support for splits. All data provided to the backtester should be relative to the first day or last day. Yahoo Finance data does do this automatically. 
+
+## License
+This software is built in part using Booleano by Gustavo Narea licensed under GPL v3. [Booleano on launchpad](https://launchpad.net/booleano)
+All changes I made to Booleano are available in the Booleano subdirectory of this repository. Changes made to Booleano were to make it compatible with Python 3, add arithmetic, and add array variables.
+
+The rest of the code, all code not in the Booleano directory, was written by Michael Dombrowski and is licensed under GPL version 3.

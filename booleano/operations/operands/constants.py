@@ -29,8 +29,8 @@
 Constant operands.
 
 """
-from booleano.operations.operands import Operand
 from booleano.exc import InvalidOperationError
+from booleano.operations.operands import Operand
 
 __all__ = ["String", "Number", "Arithmetic", "Set"]
 
@@ -237,7 +237,7 @@ class ArithmeticVariable(object):
 		# Then replace variables with no namespace
 		number = self.replace(number, context, False)
 		number = number.replace("^", "**")
-		import SafeEval
+		from booleano import SafeEval
 		answer = SafeEval.eval_expr(number)
 		return answer
 

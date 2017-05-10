@@ -1,6 +1,6 @@
 # Copyright (c) 2017 by Michael Dombrowski <http://MikeDombrowski.com/>.
 #
-# This file is part of Python Customizable Stock Backtester <http://github.com/md100play/Stock_Backtester/>.
+# This file is part of Booleano <http://code.gustavonarea.net/booleano>.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,24 +24,27 @@
 # holders shall not be used in advertising or otherwise to promote the sale,
 # use or other dealings in this Software without prior written authorization.
 
+import ast
+import operator as op
+import math
 
-class StockHist(object):
-	date_keyed = {}
+# supported operators
+operators = {ast.Add: op.add, ast.Sub: op.sub, ast.Mult: op.mul,
+             ast.Div: op.truediv, ast.Pow: math.pow, ast.BitXor: op.xor,
+             ast.USub: op.neg, ast.Mod: op.mod
+             }
 
-	def __init__(self, symbol, date, date_keyed, symbol_keyed):
-		self.symbol = symbol
-		self.date = date
-		self.date_keyed = date_keyed
-		self.symbol_keyed = symbol_keyed
 
-	def get(self, index=0):
-		for i, d in enumerate(self.symbol_keyed):
-			if d[0] == self.date:
-				break
-		sd = self.symbol_keyed[i - index]
-		data = self.date_keyed[sd[0]][self.symbol]
+def eval_expr(expr):
+	return eval_(ast.parse(expr, mode='eval').body)
 
-		return {"open_price": data["open"], "close_price": data["close"], "price": data["close"],
-		        "increase_rank": data["increase_rank"], "decrease_rank": data["decrease_rank"],
-		        "change_percent": data["change"]
-		        }
+
+def eval_(node):
+	if isinstance(node, ast.Num):  # <number>
+		return node.n
+	elif isinstance(node, ast.BinOp):  # <left> <operator> <right>
+		return operators[type(node.op)](eval_(node.left), eval_(node.right))
+	elif isinstance(node, ast.UnaryOp):  # <operator> <operand> e.g., -1
+		return operators[type(node.op)](eval_(node.operand))
+	else:
+		raise TypeError(node)

@@ -60,11 +60,11 @@ i.e. a stock with a decrease_rank of 0 had the greatest decrease by percent for 
 - "stock:change_percent" - The decimal percentage change for thist stock for today. Decimal percent means that 10% will be 0.1. Supports array indexing.
 
 #### Date Variables
-- "date" or "date:today" - Today's date in Unix epoch time.
-- "date:days_of_history" - Number of days of previous data available for the stock, (i.e. days since the stock was listed). To be used with array variables.
+- "date" or "date:today" - Today's date in Unix epoch time. "date:today" is an array variable. If you want yesterday, you can enter "date:today:1".
+- "date:days_of_history" - Number of days of previous data available for the stock, (i.e. days since the stock was listed). To be used with array variables. "date:days_of_history" is an array variable, if you want the days of history for two days ago, enter: "date:days_of_history:2".
 - "date:buy" - The Unix epoch time that the stock was purchased (if it was). Only to be used for sell conditions, not buy conditions.
-- "date:day_of_week" - Today's day of the week as an integer from 1 to 7, where 1 is Monday.
-- "date:month" - The month that today is in. 1 is January.
+- "date:day_of_week" - Today's day of the week as an integer from 1 to 7, where 1 is Monday and 7 is Sunday. "date:day_of_week" is an array variable.
+- "date:month" - The month that today is in. 1 is January. "date:month" is an array variable.
 - "date:days" - Constant value to be used in arithmetic. If you want to sell after 10 days the sell condition would be 
 `date >= date:buy+[10*date:days]`.
 - "date:months" - Constant value to be used in arithmetic. Similar to "date:days".

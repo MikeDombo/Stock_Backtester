@@ -257,7 +257,7 @@ class DateBuy(Variable):
 		return context["date"]["buy"]
 
 
-class DateToday(Variable):
+class DateToday(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -279,10 +279,13 @@ class DateToday(Variable):
 		return value
 
 	def to_python(self, context):
-		return context["date"]["today"]
+		if self.index == 0:
+			return context["date"]["today"]
+		else:
+			return context["date"]["data"].get(self.index)['today']
 
 
-class DateDayOfWeek(Variable):
+class DateDayOfWeek(ArrayVariable):
 	operations = {"equality", "inequality", "membership"}
 
 	def equals(self, value, context):
@@ -307,10 +310,13 @@ class DateDayOfWeek(Variable):
 		return value.issubset(self.to_python(context))
 
 	def to_python(self, context):
-		return int(context['date']["day_of_week"])
+		if self.index == 0:
+			return int(context['date']["day_of_week"])
+		else:
+			return int(context["date"]["data"].get(self.index)['day_of_week'])
 
 
-class DateMonth(Variable):
+class DateMonth(ArrayVariable):
 	operations = {"equality", "inequality", "membership"}
 
 	def equals(self, value, context):
@@ -335,7 +341,10 @@ class DateMonth(Variable):
 		return value.issubset(self.to_python(context))
 
 	def to_python(self, context):
-		return int(context['date']["month"])
+		if self.index == 0:
+			return int(context['date']["month"])
+		else:
+			return int(context["date"]["data"].get(self.index)['month'])
 
 
 class DateDays(Variable):
@@ -404,7 +413,7 @@ class DateYears(Variable):
 		return int(context["date"]["years"])
 
 
-class DateDaysOfHistory(Variable):
+class DateDaysOfHistory(ArrayVariable):
 	operations = {"equality", "inequality"}
 
 	def equals(self, value, context):
@@ -423,4 +432,7 @@ class DateDaysOfHistory(Variable):
 		return actual < expected
 
 	def to_python(self, context):
-		return int(context['date']['days_of_history'])
+		if self.index == 0:
+			return int(context['date']['days_of_history'])
+		else:
+			return int(context["date"]["data"].get(self.index)['days_of_history'])

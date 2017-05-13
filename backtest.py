@@ -126,7 +126,11 @@ if __name__ == '__main__':
 		                                     Bind("days", stockVars.DateDays()),
 		                                     Bind("months", stockVars.DateMonths()),
 		                                     Bind("years", stockVars.DateYears()),
-	                                     ]
+	                                     ],
+	                                     SymbolTable("today", []),
+	                                     SymbolTable("days_of_history", []),
+	                                     SymbolTable("day_of_week", []),
+	                                     SymbolTable("month", [])
 	                                     )
 	                         )
 

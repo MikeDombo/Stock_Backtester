@@ -24,6 +24,9 @@
 # holders shall not be used in advertising or otherwise to promote the sale,
 # use or other dealings in this Software without prior written authorization.
 
+from datetime import date as dt_date
+import heapq
+
 
 class StockProcessing(object):
 	def __init__(self, data_dir, date_fmt, columns):
@@ -86,24 +89,30 @@ class StockProcessing(object):
 
 	def buy_stocks(self, buy_parser, sell_parser):
 		from StockHist import StockHist
+		from DateHist import DateHist
+
 		self.logger.info("Finding stocks to buy and sell day-by-day")
 		for date in self.dates_arr:
 			symbol_data = self.date_keyed[date]
-			losers = self.__find_biggest_losers(symbol_data)
-			winners = self.__find_biggest_winners(symbol_data)
+			change_ordered_symbols = self.__sort_stock_by_change(symbol_data)
+			num_symbols = len(change_ordered_symbols)
 			for symbol, s_data in symbol_data.items():
-				self.date_keyed[date][symbol]["increase_rank"] = winners[symbol]
-				self.date_keyed[date][symbol]["decrease_rank"] = losers[symbol]
+				decr_rank = change_ordered_symbols[symbol]
+				incr_rank = num_symbols - decr_rank - 1
 
-				days_of_hist = s_data["doh"]
+				self.date_keyed[date][symbol]["increase_rank"] = incr_rank
+				self.date_keyed[date][symbol]["decrease_rank"] = decr_rank
+
 				sh = StockHist(symbol, date, self.date_keyed, self.symbol_keyed[symbol])
+				dh = DateHist(symbol, date, self.date_keyed, self.symbol_keyed[symbol])
 				test_data = {"stock": {"symbol": symbol, "data": sh, "open_price": s_data["open"],
 				                       "close_price": s_data["close"], "price": s_data["close"],
-				                       "increase_rank": winners[symbol], "decrease_rank": losers[symbol],
+				                       "increase_rank": incr_rank, "decrease_rank": decr_rank,
 				                       "change_percent": s_data["change"]},
-				             "date": {"today": self.get_unix_time_date(date), "days_of_history": days_of_hist,
-				                      "buy": 0, "day_of_week": date.isoweekday(),
-				                      "month": date.month, "days": 86400, "months": 2592000, "years": 31536000}
+				             "date": {"today": self.get_unix_time_date(date), "days_of_history": s_data["doh"],
+				                      "buy": 0, "day_of_week": date.isoweekday(), "month": date.month,
+				                      "data": dh,
+				                      "days": 86400, "months": 2592000, "years": 31536000}
 				             }
 				test_data["stock"]["owned"] = symbol in self.owned_stocks and self.owned_stocks[symbol] is not None
 
@@ -140,45 +149,20 @@ class StockProcessing(object):
 			self.order_history[symbol].append(data)
 
 	@staticmethod
-	def __find_biggest_losers(d):
-		import heapq
+	def __sort_stock_by_change(d):
 		minheap = []
 		for symbol, data in d.items():
 			heapq.heappush(minheap, (data["change"], symbol))
-		ordered_stocks = [heapq.heappop(minheap) for i in range(len(minheap))]
-		return_stocks = {}
-		i = 0
-		for change, symbol in ordered_stocks:
-			return_stocks[symbol] = i
-			i += 1
 
-		return return_stocks
+		ordered_stocks = {}
+		for i in range(len(minheap)):
+			ordered_stocks[heapq.heappop(minheap)[1]] = i
 
-	@staticmethod
-	def __find_biggest_winners(d):
-		import heapq
-		minheap = []
-		for symbol, data in d.items():
-			heapq.heappush(minheap, (data["change"], symbol))
-		ordered_stocks = [heapq.heappop(minheap) for i in range(len(minheap))]
-		ordered_stocks = reversed(ordered_stocks)
-		return_stocks = {}
-		i = 0
-		for change, symbol in ordered_stocks:
-			return_stocks[symbol] = i
-			i += 1
-
-		return return_stocks
+		return ordered_stocks
 
 	@staticmethod
 	def get_unix_time_date(date):
-		import datetime
-		return (date - datetime.datetime(1970, 1, 1).date()).total_seconds()
-
-	@staticmethod
-	def get_unix_time(date):
-		import datetime
-		return (date - datetime.datetime(1970, 1, 1)).total_seconds()
+		return (date - dt_date(1970, 1, 1)).total_seconds()
 
 	@staticmethod
 	def __process_csv(fn, date_fmt, columns):

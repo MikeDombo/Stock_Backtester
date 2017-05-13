@@ -172,6 +172,8 @@ class ArithmeticVariable(object):
 		self._namespace = namespace
 		self.variables = {}
 		self.__define_variables()
+		number = self.flatten(self.parsed_results)
+		self.__full_expression = "".join(number)
 
 	def __str__(self):
 		number = self.flatten(self.parsed_results)
@@ -229,8 +231,7 @@ class ArithmeticVariable(object):
 		return num
 
 	def evaluate(self, context):
-		number = self.flatten(self.parsed_results)
-		number = "".join(number)
+		number = self.__full_expression
 		# Replace all variables with numbers
 		# First replace variables with namespaces defined to avoid clobbering
 		number = self.replace(number, context)
